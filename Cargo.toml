@@ -3,13 +3,13 @@ name = "blsful"
 version = "1.0.0"
 authors = ["Michael Lodder <redmike7@gmail.com>"]
 edition = "2021"
-license = "Apache-2.0 or MIT"
+license = "MIT OR Apache-2.0"
 homepage = "https://github.com/mikelodder7/blsful"
 repository = "https://github.com/mikelodder7/blsful"
+documentation = "https://docs.rs/blsful"
 readme = "README.md"
 categories = [
     "cryptography",
-    "asynchronous",
     "authentication",
     "no-std",
     "algorithms",
