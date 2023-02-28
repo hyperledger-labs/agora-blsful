@@ -84,10 +84,16 @@ Create a proof of knowledge
 ```rust
 use crate::elliptic_curve::ff::Field;
 
-// receive y from verifier
 let x = crate::bls12_381_plus::Scalar::random(rand_core::OsRng);
-let spok = sig.proof_of_knowledge(b"00000000-0000-0000-0000-000000000000", x, y).expect("a signature proof of knowledge");
-// Send msg and spok to server
+let spok = sig.proof_of_knowledge_with_timestamp(b"00000000-0000-0000-0000-000000000000", x, y).expect("a signature proof of knowledge");
+// Send msg and spok to verifier
+assert_eq!(spok.verify(pk, b"00000000-0000-0000-0000-000000000000", y).unwrap_u8(), 1u8);
+
+// or do the three step process
+let commitment = sig.proof_of_knowledge_commitment(b"00000000-0000-0000-0000-000000000000", x).expect("a proof of knowledge commitment");
+// send commitment to the verifier and receive a challenge
+let spok = commitment.complete(x, y, sig).expect("a signature proof of knowledge");
+// Send msg and spok to verifier
 assert_eq!(spok.verify(pk, b"00000000-0000-0000-0000-000000000000", y).unwrap_u8(), 1u8);
 ```
 

@@ -23,9 +23,10 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 #[cfg(feature = "std")]
-extern crate core;
+#[cfg_attr(feature = "std", macro_use)]
+extern crate std;
 
-#[cfg(feature = "alloc")]
+#[cfg(all(feature = "alloc", not(feature = "std")))]
 extern crate alloc;
 
 #[macro_use]
