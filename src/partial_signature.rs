@@ -85,7 +85,7 @@ impl PartialSignature {
 
     /// Get the byte sequence that represents this partial signature
     pub fn to_bytes(self) -> [u8; Self::BYTES] {
-        self.0.0
+        self.0 .0
     }
 
     /// Convert a big-endian representation of the partial signature

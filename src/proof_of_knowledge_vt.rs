@@ -163,7 +163,10 @@ fn proof_serialization() {
     use rand_core::SeedableRng;
 
     let mut rng = crate::MockRng::from_seed([7u8; 16]);
-    let proof = ProofOfKnowledgeVt { u: G2Projective::random(&mut rng), v: G2Projective::random(&mut rng ) };
+    let proof = ProofOfKnowledgeVt {
+        u: G2Projective::random(&mut rng),
+        v: G2Projective::random(&mut rng),
+    };
 
     let proof_bytes = serde_bare::to_vec(&proof).unwrap();
     let res_de_proof = serde_bare::from_slice::<ProofOfKnowledgeVt>(&proof_bytes);
