@@ -60,6 +60,7 @@ impl AggregateSignatureVt {
             sig: &G2Projective,
             data: &[(PublicKeyVt, B)],
         ) -> Choice {
+            use crate::inner::Vec;
             use bls12_381_plus::{multi_miller_loop, G2Prepared};
 
             if data.iter().any(|(k, _)| k.is_invalid().unwrap_u8() == 1) {

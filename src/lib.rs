@@ -29,6 +29,14 @@ extern crate std;
 #[cfg(all(feature = "alloc", not(feature = "std")))]
 extern crate alloc;
 
+#[cfg(any(feature = "alloc", feature = "std"))]
+pub(crate) mod inner {
+    #[cfg(all(feature = "alloc", not(feature = "std")))]
+    pub use alloc::vec::Vec;
+    #[cfg(feature = "std")]
+    pub use std::vec::Vec;
+}
+
 #[macro_use]
 mod macros;
 

@@ -19,10 +19,11 @@ description = """BLS signature implementation according to the IETF spec on the 
 
 [features]
 default = ["std"]
-alloc = []
-std = ["alloc", "iso8601-timestamp"]
+alloc = ["arrayref"]
+std = ["alloc", "iso8601-timestamp", "rand_core/std"]
 
 [dependencies]
+arrayref = { version = "0.3.6", optional = true }
 bls12_381_plus = "0.5.5"
 ff = { version = "0.12", default-features = false }
 group = "0.12"

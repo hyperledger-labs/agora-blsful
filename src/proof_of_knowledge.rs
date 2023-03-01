@@ -114,7 +114,7 @@ impl ProofOfKnowledge {
 #[cfg(feature = "iso8601-timestamp")]
 /// A signature proof of knowledge where the
 /// challenge is derived from a timestamp
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize)]
 pub struct ProofOfKnowledgeTimestamp {
     /// The signature proof of knowledge
     pub pok: ProofOfKnowledge,
@@ -124,6 +124,8 @@ pub struct ProofOfKnowledgeTimestamp {
 
 #[cfg(feature = "iso8601-timestamp")]
 impl ProofOfKnowledgeTimestamp {
+    /// The number of bytes required for this proof
+    pub const BYTES: usize = 96;
     /// Verify the proof of knowledge
     pub fn verify<B: AsRef<[u8]>>(&self, pk: PublicKey, msg: B, timeout_ms: i64) -> Choice {
         let now = iso8601_timestamp::Timestamp::now_utc();
@@ -136,6 +138,26 @@ impl ProofOfKnowledgeTimestamp {
 
         let y = ProofOfKnowledge::compute_y(self.pok.u, self.t);
         self.pok.verify(pk, msg, y)
+    }
+
+    /// Get the byte representation
+    pub fn to_bytes(&self) -> [u8; Self::BYTES] {
+        let mut bytes = [0u8; Self::BYTES];
+        bytes[..ProofOfKnowledge::BYTES].copy_from_slice(&self.pok.to_bytes());
+        bytes[ProofOfKnowledge::BYTES..].copy_from_slice(&self.t.to_be_bytes());
+        bytes
+    }
+
+    /// Convert a big-endian representation
+    pub fn from_bytes(bytes: &[u8; Self::BYTES]) -> CtOption<Self> {
+        let pok_bytes = arrayref::array_ref![bytes, 0, ProofOfKnowledge::BYTES];
+        let ct_pok = ProofOfKnowledge::from_bytes(pok_bytes);
+        if ct_pok.is_none().unwrap_u8() == 1u8 {
+            return CtOption::new(Self::default(), Choice::from(0u8));
+        }
+
+        let t = i64::from_be_bytes(<[u8; 8]>::try_from(&bytes[ProofOfKnowledge::BYTES..]).unwrap());
+        ct_pok.map(|pok| Self { pok, t })
     }
 }
 

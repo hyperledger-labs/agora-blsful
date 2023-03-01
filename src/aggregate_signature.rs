@@ -55,11 +55,12 @@ impl AggregateSignature {
             res += pairing(&sig.to_affine(), &-G2Affine::generator());
             res.is_identity()
         }
-        #[cfg(feature = "alloc")]
+        #[cfg(any(feature = "alloc", feature = "std"))]
         fn core_aggregate_verify<B: AsRef<[u8]>>(
             sig: &G1Projective,
             data: &[(PublicKey, B)],
         ) -> Choice {
+            use crate::inner::Vec;
             use bls12_381_plus::{multi_miller_loop, G2Prepared};
 
             if data.iter().any(|(k, _)| k.is_invalid().unwrap_u8() == 1) {

@@ -1,5 +1,5 @@
 use crate::partial_signature_vt::PARTIAL_SIGNATURE_VT_BYTES;
-use crate::{PartialSignatureVt, ProofCommitmentVt, ProofOfKnowledgeVt, PublicKeyVt, SecretKey};
+use crate::{PartialSignatureVt, ProofCommitmentVt, PublicKeyVt, SecretKey};
 use bls12_381_plus::{
     multi_miller_loop, ExpandMsgXmd, G1Affine, G2Affine, G2Prepared, G2Projective, Scalar,
 };
@@ -76,11 +76,25 @@ impl SignatureVt {
         Ok(Self(point))
     }
 
+    #[cfg(feature = "std")]
+    /// Create a zero-knowledge proof of a valid signature
+    /// `x` is a random Scalar and should be kept private
+    /// The commitment is then sent to the verifier to receive
+    /// a challenge
+    pub fn proof_of_knowledge_commitment<B: AsRef<[u8]>>(
+        &self,
+        msg: B,
+    ) -> Option<(ProofCommitmentVt, Scalar)> {
+        let x = Scalar::random(rand_core::OsRng);
+        let pok = self.proof_of_knowledge_commitment_with_x(msg, x)?;
+        Some((pok, x))
+    }
+
     /// Create a zero-knowledge proof of a valid signature
     /// `x` should be a random Scalar and kept private
     /// The commitment is then sent to the verifier to receive
     /// a challenge
-    pub fn proof_of_knowledge_commitment<B: AsRef<[u8]>>(
+    pub fn proof_of_knowledge_commitment_with_x<B: AsRef<[u8]>>(
         &self,
         msg: B,
         x: Scalar,
@@ -108,6 +122,8 @@ impl SignatureVt {
         msg: B,
         x: Scalar,
     ) -> Option<crate::ProofOfKnowledgeVtTimestamp> {
+        use crate::ProofOfKnowledgeVt;
+
         if self.is_invalid().unwrap_u8() == 1u8 {
             return None;
         }
