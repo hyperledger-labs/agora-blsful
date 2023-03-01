@@ -60,7 +60,8 @@ impl AggregateSignature {
             sig: &G1Projective,
             data: &[(PublicKey, B)],
         ) -> Choice {
-            use crate::inner::Vec;
+            #[cfg(all(feature = "alloc", not(feature = "std")))]
+            use alloc::vec::Vec;
             use bls12_381_plus::{multi_miller_loop, G2Prepared};
 
             if data.iter().any(|(k, _)| k.is_invalid().unwrap_u8() == 1) {
