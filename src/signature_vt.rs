@@ -1,5 +1,5 @@
 use crate::partial_signature_vt::PARTIAL_SIGNATURE_VT_BYTES;
-use crate::{PartialSignatureVt, ProofCommitmentVt, PublicKeyVt, SecretKey};
+use crate::{PartialSignatureVt, PublicKeyVt, SecretKey};
 use bls12_381_plus::{
     multi_miller_loop, ExpandMsgXmd, G1Affine, G2Affine, G2Prepared, G2Projective, Scalar,
 };
@@ -74,83 +74,6 @@ impl SignatureVt {
             PARTIAL_SIGNATURE_VT_BYTES,
         >(&pp)?;
         Ok(Self(point))
-    }
-
-    #[cfg(feature = "std")]
-    /// Create a zero-knowledge proof of a valid signature
-    /// `x` is a random Scalar and should be kept private
-    /// The commitment is then sent to the verifier to receive
-    /// a challenge
-    pub fn proof_of_knowledge_commitment<B: AsRef<[u8]>>(
-        &self,
-        msg: B,
-    ) -> Option<(ProofCommitmentVt, Scalar)> {
-        let x = Scalar::random(rand_core::OsRng);
-        let pok = self.proof_of_knowledge_commitment_with_x(msg, x)?;
-        Some((pok, x))
-    }
-
-    /// Create a zero-knowledge proof of a valid signature
-    /// `x` should be a random Scalar and kept private
-    /// The commitment is then sent to the verifier to receive
-    /// a challenge
-    pub fn proof_of_knowledge_commitment_with_x<B: AsRef<[u8]>>(
-        &self,
-        msg: B,
-        x: Scalar,
-    ) -> Option<ProofCommitmentVt> {
-        if (self.is_invalid() | x.is_zero()).unwrap_u8() == 1u8 {
-            return None;
-        }
-        let a = Self::hash_msg(msg.as_ref());
-        if a.is_identity().unwrap_u8() == 1u8 {
-            return None;
-        }
-        let u = a * x;
-        if u.is_identity().unwrap_u8() == 1u8 {
-            return None;
-        }
-        Some(ProofCommitmentVt(u))
-    }
-
-    /// Create a proof of knowledge based ona timestamp instead of a
-    /// server challenge
-    /// `x` should be a random Scalar and kept private
-    #[cfg(feature = "iso8601-timestamp")]
-    pub fn proof_of_knowledge_with_timestamp<B: AsRef<[u8]>>(
-        &self,
-        msg: B,
-        x: Scalar,
-    ) -> Option<crate::ProofOfKnowledgeVtTimestamp> {
-        use crate::ProofOfKnowledgeVt;
-
-        if self.is_invalid().unwrap_u8() == 1u8 {
-            return None;
-        }
-        if x.is_zero().unwrap_u8() == 1u8 {
-            return None;
-        }
-        let a = Self::hash_msg(msg.as_ref());
-        if a.is_identity().unwrap_u8() == 1u8 {
-            return None;
-        }
-        let u = a * x;
-        if u.is_identity().unwrap_u8() == 1u8 {
-            return None;
-        }
-        let (y, t) = ProofOfKnowledgeVt::generate_timestamp_based_y(u);
-        if y.is_zero().unwrap_u8() == 1u8 {
-            return None;
-        }
-
-        let v = self.0 * (x + y);
-        if v.is_identity().unwrap_u8() == 1u8 {
-            return None;
-        }
-        Some(crate::ProofOfKnowledgeVtTimestamp {
-            pok: ProofOfKnowledgeVt { u, v: -v },
-            t,
-        })
     }
 }
 

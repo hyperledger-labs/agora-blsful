@@ -20,6 +20,36 @@ impl ProofCommitmentVt {
     /// Number of bytes needed to represent this commitment
     pub const BYTES: usize = 96;
 
+    #[cfg(feature = "std")]
+    /// Create a zero-knowledge proof of a valid signature
+    /// `x` is a random Scalar and should be kept private
+    /// The commitment is then sent to the verifier to receive
+    /// a challenge
+    pub fn from_msg<B: AsRef<[u8]>>(msg: B) -> Option<(ProofCommitmentVt, Scalar)> {
+        let x = Scalar::random(rand_core::OsRng);
+        let pok = Self::from_msg_with_x(msg, x)?;
+        Some((pok, x))
+    }
+
+    /// Create a zero-knowledge proof of a valid signature
+    /// `x` should be a random Scalar and kept private
+    /// The commitment is then sent to the verifier to receive
+    /// a challenge
+    pub fn from_msg_with_x<B: AsRef<[u8]>>(msg: B, x: Scalar) -> Option<ProofCommitmentVt> {
+        if x.is_zero().unwrap_u8() == 1u8 {
+            return None;
+        }
+        let a = SignatureVt::hash_msg(msg.as_ref());
+        if a.is_identity().unwrap_u8() == 1u8 {
+            return None;
+        }
+        let u = a * x;
+        if u.is_identity().unwrap_u8() == 1u8 {
+            return None;
+        }
+        Some(ProofCommitmentVt(u))
+    }
+
     validity_checks!();
 
     bytes_impl!(G2Affine, G2Projective);

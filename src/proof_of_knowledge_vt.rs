@@ -127,6 +127,39 @@ impl ProofOfKnowledgeVtTimestamp {
     /// The number of bytes required for this proof
     pub const BYTES: usize = 200;
 
+    /// Create a proof of knowledge based ona timestamp instead of a
+    /// server challenge
+    pub fn new<B: AsRef<[u8]>>(msg: B, sig: SignatureVt) -> Option<ProofOfKnowledgeVtTimestamp> {
+        if sig.is_invalid().unwrap_u8() == 1u8 {
+            return None;
+        }
+        let x = Scalar::random(rand_core::OsRng);
+        if x.is_zero().unwrap_u8() == 1u8 {
+            return None;
+        }
+        let a = SignatureVt::hash_msg(msg.as_ref());
+        if a.is_identity().unwrap_u8() == 1u8 {
+            return None;
+        }
+        let u = a * x;
+        if u.is_identity().unwrap_u8() == 1u8 {
+            return None;
+        }
+        let (y, t) = ProofOfKnowledgeVt::generate_timestamp_based_y(u);
+        if y.is_zero().unwrap_u8() == 1u8 {
+            return None;
+        }
+
+        let v = sig.0 * (x + y);
+        if v.is_identity().unwrap_u8() == 1u8 {
+            return None;
+        }
+        Some(Self {
+            pok: ProofOfKnowledgeVt { u, v: -v },
+            t,
+        })
+    }
+
     /// Verify the proof of knowledge
     pub fn verify<B: AsRef<[u8]>>(&self, pk: PublicKeyVt, msg: B, timeout_ms: i64) -> Choice {
         let now = iso8601_timestamp::Timestamp::now_utc();
