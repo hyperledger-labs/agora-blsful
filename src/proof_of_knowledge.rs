@@ -1,10 +1,10 @@
 use crate::{PublicKey, Signature};
-use bls12_381_plus::{multi_miller_loop, G1Projective, G2Affine, G2Prepared, Scalar};
+use bls12_381_plus::{multi_miller_loop, G1Affine, G1Projective, G2Affine, G2Prepared, Scalar};
 use core::fmt::{self, Display, Formatter};
 use ff::Field;
 use group::{Curve, Group};
 use serde::{Deserialize, Serialize};
-use subtle::{Choice, ConditionallySelectable};
+use subtle::{Choice, ConditionallySelectable, CtOption};
 
 /// A signature proof of knowledge
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
@@ -31,6 +31,9 @@ impl ConditionallySelectable for ProofOfKnowledge {
 }
 
 impl ProofOfKnowledge {
+    /// The number of bytes required for this proof
+    pub const BYTES: usize = 96;
+
     /// Check if this is valid
     pub fn is_valid(&self) -> Choice {
         !self.u.is_identity() | self.u.is_on_curve() | !self.v.is_identity() | self.v.is_on_curve()
@@ -59,6 +62,25 @@ impl ProofOfKnowledge {
         ])
         .final_exponentiation()
         .is_identity()
+    }
+
+    /// Get the byte representation
+    pub fn to_bytes(&self) -> [u8; Self::BYTES] {
+        let mut bytes = [0u8; Self::BYTES];
+        bytes[..Self::BYTES / 2].copy_from_slice(&self.u.to_affine().to_compressed());
+        bytes[Self::BYTES / 2..].copy_from_slice(&self.v.to_affine().to_compressed());
+        bytes
+    }
+
+    /// Convert a big-endian representation
+    pub fn from_bytes(bytes: &[u8; Self::BYTES]) -> CtOption<Self> {
+        let uu =
+            G1Affine::from_compressed(&<[u8; 48]>::try_from(&bytes[..Self::BYTES / 2]).unwrap())
+                .map(G1Projective::from);
+        let vv =
+            G1Affine::from_compressed(&<[u8; 48]>::try_from(&bytes[Self::BYTES / 2..]).unwrap())
+                .map(G1Projective::from);
+        uu.and_then(|u| vv.and_then(|v| CtOption::new(Self { u, v }, Choice::from(1u8))))
     }
 
     #[cfg(feature = "iso8601-timestamp")]
