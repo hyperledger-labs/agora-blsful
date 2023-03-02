@@ -125,7 +125,7 @@ pub struct ProofOfKnowledgeTimestamp {
 #[cfg(feature = "iso8601-timestamp")]
 impl ProofOfKnowledgeTimestamp {
     /// The number of bytes required for this proof
-    pub const BYTES: usize = 96;
+    pub const BYTES: usize = ProofOfKnowledge::BYTES + 8;
 
     /// Create a proof of knowledge based ona timestamp instead of a
     /// server challenge
