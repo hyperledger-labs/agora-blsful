@@ -1,6 +1,5 @@
 use crate::{MultiPublicKey, PublicKey, Signature};
-use bls12_381_plus::{G1Affine, G1Projective};
-use group::Curve;
+use bls12_381_plus::{G1Affine, G1Projective, group::Curve};
 use subtle::{Choice, CtOption};
 
 /// Represents a BLS signature in G1 for multiple signatures that signed the same message

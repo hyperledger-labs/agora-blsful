@@ -1,10 +1,11 @@
 use crate::{secret_key_share::SECRET_KEY_SHARE_BYTES, SecretKeyShare};
 use bls12_381_plus::Scalar;
-use core::mem::MaybeUninit;
 use hkdf::HkdfExtract;
 use rand_core::{CryptoRng, RngCore};
 use subtle::CtOption;
-use vsss_rs::{Error, Shamir, Share};
+use vsss_rs::{Error, shamir::{
+    split_secret_const_generics, combine_shares_const_generics,
+}, const_generics::Share, heapless::Vec};
 use zeroize::Zeroize;
 
 /// The secret key is field element 0 < `x` < `r`
@@ -62,33 +63,30 @@ impl SecretKey {
 
     /// Secret share this key by creating `N` shares where `T` are required
     /// to combine back into this secret
-    #[allow(unsafe_code)]
-    pub fn split<R: RngCore + CryptoRng, const T: usize, const N: usize>(
+    pub fn split<R: RngCore + CryptoRng>(
         &self,
+        threshold: usize,
+        limit: usize,
         rng: &mut R,
-    ) -> Result<[SecretKeyShare; N], Error> {
-        let shares =
-            Shamir::<T, N>::split_secret::<Scalar, R, SECRET_KEY_SHARE_BYTES>(self.0, rng)?;
-        let mut secrets: MaybeUninit<[SecretKeyShare; N]> = MaybeUninit::uninit();
-        for (i, s) in shares.iter().enumerate() {
-            let p = (secrets.as_mut_ptr() as *mut SecretKeyShare).wrapping_add(i);
-            unsafe { core::ptr::write(p, SecretKeyShare(*s)) };
-        }
-        Ok(unsafe { secrets.assume_init() })
+    ) -> Result<Vec<SecretKeyShare, 255>, Error> {
+        let shares = split_secret_const_generics::<_, _, SECRET_KEY_SHARE_BYTES>(threshold, limit, self.0, rng)?;
+        Ok(shares.iter().map(|s| {
+            SecretKeyShare(s.clone())
+        }).collect())
     }
 
     /// Reconstruct a secret from shares created from `split`
-    pub fn combine<const T: usize, const N: usize>(
+    pub fn combine(
         shares: &[SecretKeyShare],
     ) -> Result<SecretKey, Error> {
-        if T > shares.len() {
+        if shares.len() < 2 {
             return Err(Error::SharingLimitLessThanThreshold);
         }
-        let mut ss = [Share::<SECRET_KEY_SHARE_BYTES>::default(); T];
-        for i in 0..T {
-            ss[i] = shares[i].0;
+        let mut ss = Vec::<Share<SECRET_KEY_SHARE_BYTES>, 255>::new();
+        for s in shares {
+            ss.push(s.0.clone()).unwrap();
         }
-        let scalar = Shamir::<T, N>::combine_shares::<Scalar, SECRET_KEY_SHARE_BYTES>(&ss)?;
+        let scalar = combine_shares_const_generics::<_, SECRET_KEY_SHARE_BYTES>(&ss)?;
         Ok(SecretKey(scalar))
     }
 }

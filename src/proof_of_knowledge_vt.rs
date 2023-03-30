@@ -1,8 +1,10 @@
 use crate::{PublicKeyVt, SignatureVt};
-use bls12_381_plus::{multi_miller_loop, G1Affine, G2Affine, G2Prepared, G2Projective, Scalar};
+use bls12_381_plus::{
+    ff::Field,
+    group::{Curve, Group},
+    multi_miller_loop, G1Affine, G2Affine, G2Prepared, G2Projective, Scalar
+};
 use core::fmt::{self, Display, Formatter};
-use ff::Field;
-use group::{Curve, Group};
 use serde::{Deserialize, Serialize};
 use subtle::{Choice, ConditionallySelectable, CtOption};
 
@@ -210,7 +212,10 @@ fn proof_vt_works() {
     let x = Scalar::random(&mut rng);
     let y = Scalar::random(&mut rng);
 
-    let opt_proof = sig.proof_of_knowledge(msg, x, y);
+    let opt_commitment = ProofCommitmentVt::from_msg_with_x(msg, x);
+    assert!(opt_commitment.is_some());
+    let commitment = opt_commitment.unwrap();
+    let opt_proof =  commitment.complete(x, y, sig);
     assert!(opt_proof.is_some());
     let mut proof = opt_proof.unwrap();
     assert_eq!(proof.verify(pk, msg, y).unwrap_u8(), 1u8);
@@ -227,7 +232,7 @@ fn proof_vt_works() {
 
     #[cfg(feature = "iso8601-timestamp")]
     {
-        let opt_proof = sig.proof_of_knowledge_with_timestamp(msg, x);
+        let opt_proof = ProofOfKnowledgeVtTimestamp::new(msg, sig);
         assert!(opt_proof.is_some());
         let mut proof = opt_proof.unwrap();
         assert_eq!(proof.verify(pk, msg, 2000).unwrap_u8(), 1u8);

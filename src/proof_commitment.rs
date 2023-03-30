@@ -1,7 +1,5 @@
 use crate::{ProofOfKnowledge, Signature};
-use bls12_381_plus::{G1Affine, G1Projective, Scalar};
-use ff::Field;
-use group::Curve;
+use bls12_381_plus::{G1Affine, G1Projective, Scalar, ff::Field, group::Curve};
 use subtle::{Choice, CtOption};
 
 /// The first step in proof of knowledge protocol

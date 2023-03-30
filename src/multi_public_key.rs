@@ -1,6 +1,5 @@
 use crate::PublicKey;
-use bls12_381_plus::{G2Affine, G2Projective};
-use group::Curve;
+use bls12_381_plus::{G2Affine, G2Projective, group::Curve};
 use subtle::{Choice, CtOption};
 
 /// Represents multiple public keys into one that can be used to verify multisignatures

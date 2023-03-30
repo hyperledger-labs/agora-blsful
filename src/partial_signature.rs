@@ -1,12 +1,14 @@
 use crate::{SecretKeyShare, Signature};
-use bls12_381_plus::{G1Affine, G1Projective, Scalar};
-use group::Curve;
+use bls12_381_plus::{G1Affine, G1Projective, Scalar, group::Curve};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use subtle::Choice;
-use vsss_rs::Share;
+use vsss_rs::{
+    const_generics::Share,
+    heapless::Vec,
+};
 
 /// Represents a BLS partial signature in G1 using the proof of possession scheme
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct PartialSignature(pub Share<PARTIAL_SIGNATURE_BYTES>);
 
 display_size_impl!(PartialSignature, PARTIAL_SIGNATURE_BYTES);
@@ -19,7 +21,7 @@ impl From<Share<PARTIAL_SIGNATURE_BYTES>> for PartialSignature {
 
 impl<'a> From<&'a Share<PARTIAL_SIGNATURE_BYTES>> for PartialSignature {
     fn from(share: &'a Share<PARTIAL_SIGNATURE_BYTES>) -> Self {
-        Self(*share)
+        Self(share.clone())
     }
 }
 
@@ -55,9 +57,9 @@ impl PartialSignature {
         let t = <[u8; 32]>::try_from(sk.0.value()).unwrap();
         let res = Scalar::from_bytes(&t).map(|s| {
             let point = a * s;
-            let mut bytes = [0u8; PARTIAL_SIGNATURE_BYTES];
-            bytes[1..].copy_from_slice(&point.to_affine().to_compressed());
-            bytes[0] = sk.0.identifier();
+            let mut bytes = Vec::<u8, PARTIAL_SIGNATURE_BYTES>::new();
+            bytes.push(sk.0.identifier()).unwrap();
+            bytes.extend_from_slice(&point.to_affine().to_compressed()).unwrap();
             Some(PartialSignature(Share(bytes)))
         });
         if res.is_some().unwrap_u8() == 1 {
@@ -84,13 +86,17 @@ impl PartialSignature {
     }
 
     /// Get the byte sequence that represents this partial signature
-    pub fn to_bytes(self) -> [u8; Self::BYTES] {
-        self.0 .0
+    pub fn to_bytes(&self) -> [u8; Self::BYTES] {
+        let mut out = [0u8; Self::BYTES];
+        out.copy_from_slice(self.0.0.as_slice());
+        out
     }
 
     /// Convert a big-endian representation of the partial signature
     pub fn from_bytes(bytes: &[u8; Self::BYTES]) -> Self {
-        Self(Share(*bytes))
+        let mut inner = Vec::new();
+        inner.extend_from_slice(bytes).unwrap();
+        Self(Share(inner))
     }
 }
 

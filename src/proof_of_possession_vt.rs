@@ -1,9 +1,10 @@
 use crate::{PublicKeyVt, SecretKey};
 use bls12_381_plus::{
-    multi_miller_loop, ExpandMsgXmd, G1Affine, G2Affine, G2Prepared, G2Projective,
+    elliptic_curve::hash2curve::ExpandMsgXmd,
+    ff::Field,
+    group::{Curve, Group},
+    multi_miller_loop, G1Affine, G2Affine, G2Prepared, G2Projective,
 };
-use ff::Field;
-use group::{Curve, Group};
 use subtle::{Choice, CtOption};
 
 /// A proof of possession of the secret key

@@ -1,6 +1,8 @@
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use vsss_rs::Share;
-use zeroize::Zeroize;
+use vsss_rs::{
+    const_generics::Share, heapless,
+};
+use zeroize::ZeroizeOnDrop;
 
 /// A secret key share is field element 0 < `x` < `r`
 /// where `r` is the curve order. See Section 4.3 in
@@ -9,14 +11,8 @@ use zeroize::Zeroize;
 /// to produce the completed key, or used for
 /// creating partial signatures which can be
 /// combined into a complete signature
-#[derive(Clone, Debug, Default, Zeroize)]
+#[derive(Clone, Debug, Default, ZeroizeOnDrop)]
 pub struct SecretKeyShare(pub Share<SECRET_KEY_SHARE_BYTES>);
-
-impl Drop for SecretKeyShare {
-    fn drop(&mut self) {
-        self.0.zeroize();
-    }
-}
 
 impl From<Share<SECRET_KEY_SHARE_BYTES>> for SecretKeyShare {
     fn from(share: Share<SECRET_KEY_SHARE_BYTES>) -> Self {
@@ -26,7 +22,7 @@ impl From<Share<SECRET_KEY_SHARE_BYTES>> for SecretKeyShare {
 
 impl<'a> From<&'a Share<SECRET_KEY_SHARE_BYTES>> for SecretKeyShare {
     fn from(share: &'a Share<SECRET_KEY_SHARE_BYTES>) -> Self {
-        Self(*share)
+        Self(share.clone())
     }
 }
 
@@ -76,12 +72,16 @@ impl SecretKeyShare {
 
     /// Get the byte representation of this key
     pub fn to_bytes(&self) -> [u8; Self::BYTES] {
-        self.0 .0
+        let mut bytes = [0u8; Self::BYTES];
+        bytes.copy_from_slice(&self.0.0);
+        bytes
     }
 
     /// Convert a big-endian representation of the secret key.
     pub fn from_bytes(bytes: &[u8; Self::BYTES]) -> Self {
-        Self(Share(*bytes))
+        let mut inner = heapless::Vec::new();
+        inner.extend_from_slice(bytes).unwrap();
+        Self(Share(inner))
     }
 }
 

@@ -1,12 +1,13 @@
 use crate::partial_signature::PARTIAL_SIGNATURE_BYTES;
 use crate::{PartialSignature, PublicKey, SecretKey};
 use bls12_381_plus::{
-    multi_miller_loop, ExpandMsgXmd, G1Affine, G1Projective, G2Affine, G2Prepared, Scalar,
+    elliptic_curve::hash2curve::ExpandMsgXmd,
+    ff::Field,
+    group::{Curve, Group},
+    multi_miller_loop, G1Affine, G1Projective, G2Affine, G2Prepared, Scalar,
 };
-use ff::Field;
-use group::{Curve, Group};
 use subtle::{Choice, CtOption};
-use vsss_rs::{Error, Shamir, Share};
+use vsss_rs::{Error, const_generics::Share, combine_shares_group_const_generics, heapless::Vec};
 
 /// Represents a BLS signature in G1 using the proof of possession scheme
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -58,18 +59,18 @@ impl Signature {
     }
 
     /// Combine partial signatures into a completed signature
-    pub fn from_partials<const T: usize, const N: usize>(
+    pub fn from_partials(
         partials: &[PartialSignature],
     ) -> Result<Self, Error> {
-        if T > partials.len() {
+        if partials.len() < 2 {
             return Err(Error::SharingLimitLessThanThreshold);
         }
-        let mut pp = [Share::<PARTIAL_SIGNATURE_BYTES>::default(); T];
-        for i in 0..T {
-            pp[i] = partials[i].0;
+        let mut pp = Vec::<Share<PARTIAL_SIGNATURE_BYTES>, 255>::new();
+        for partial in partials {
+            pp.push(partial.0.clone()).unwrap();
         }
         let point =
-            Shamir::<T, N>::combine_shares_group::<Scalar, G1Projective, PARTIAL_SIGNATURE_BYTES>(
+            combine_shares_group_const_generics::<Scalar, G1Projective, PARTIAL_SIGNATURE_BYTES>(
                 &pp,
             )?;
         Ok(Self(point))
@@ -101,13 +102,17 @@ fn threshold_works() {
     let sk = SecretKey::random(&mut rng).unwrap();
     let pk = PublicKey::from(&sk);
 
-    let res_shares = sk.split::<MockRng, 2, 3>(&mut rng);
+    let res_shares = sk.split(2, 3, &mut rng);
     assert!(res_shares.is_ok());
     let shares = res_shares.unwrap();
     let mut msg = [0u8; 12];
     rng.fill_bytes(&mut msg);
 
-    let mut sigs = [PartialSignature::default(); 3];
+    let mut sigs = [
+        PartialSignature::default(),
+        PartialSignature::default(),
+        PartialSignature::default(),
+    ];
     for (i, share) in shares.iter().enumerate() {
         let opt = PartialSignature::new(share, &msg);
         assert!(opt.is_some());
@@ -120,7 +125,7 @@ fn threshold_works() {
             if i == j {
                 continue;
             }
-            let res = Signature::from_partials::<2, 3>(&[sigs[i], sigs[j]]);
+            let res = Signature::from_partials(&[sigs[i].clone(), sigs[j].clone()]);
             assert!(res.is_ok());
             let sig = res.unwrap();
             assert_eq!(sig.verify(pk, msg).unwrap_u8(), 1);

@@ -1,6 +1,5 @@
 use super::SecretKey;
-use bls12_381_plus::{G2Affine, G2Projective};
-use group::Curve;
+use bls12_381_plus::{G2Affine, G2Projective, group::Curve};
 use subtle::{Choice, CtOption};
 
 /// A BLS public key

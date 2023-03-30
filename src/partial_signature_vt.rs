@@ -1,12 +1,11 @@
 use crate::{SecretKeyShare, SignatureVt};
-use bls12_381_plus::{G2Affine, G2Projective, Scalar};
-use group::Curve;
+use bls12_381_plus::{G2Affine, G2Projective, Scalar, group::Curve};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use subtle::Choice;
-use vsss_rs::Share;
+use vsss_rs::{const_generics::Share, heapless::Vec};
 
 /// Represents a BLS partial signature in G2 using the proof of possession scheme
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct PartialSignatureVt(pub Share<PARTIAL_SIGNATURE_VT_BYTES>);
 
 display_size_impl!(PartialSignatureVt, PARTIAL_SIGNATURE_VT_BYTES);
@@ -19,7 +18,7 @@ impl From<Share<PARTIAL_SIGNATURE_VT_BYTES>> for PartialSignatureVt {
 
 impl<'a> From<&'a Share<PARTIAL_SIGNATURE_VT_BYTES>> for PartialSignatureVt {
     fn from(share: &'a Share<PARTIAL_SIGNATURE_VT_BYTES>) -> Self {
-        Self(*share)
+        Self(share.clone())
     }
 }
 
@@ -55,9 +54,9 @@ impl PartialSignatureVt {
         let t = <[u8; 32]>::try_from(sk.0.value()).unwrap();
         let res = Scalar::from_bytes(&t).map(|s| {
             let point = a * s;
-            let mut bytes = [0u8; PARTIAL_SIGNATURE_VT_BYTES];
-            bytes[1..].copy_from_slice(&point.to_affine().to_compressed());
-            bytes[0] = sk.0.identifier();
+            let mut bytes = Vec::<u8, PARTIAL_SIGNATURE_VT_BYTES>::new();
+            bytes.push(sk.0.identifier()).unwrap();
+            bytes.extend_from_slice(&point.to_affine().to_compressed()).unwrap();
             Some(PartialSignatureVt(Share(bytes)))
         });
         if res.is_some().unwrap_u8() == 1 {
@@ -85,12 +84,16 @@ impl PartialSignatureVt {
 
     /// Get the byte sequence that represents this partial signature
     pub fn to_bytes(self) -> [u8; Self::BYTES] {
-        self.0 .0
+        let mut out = [0u8; Self::BYTES];
+        out.copy_from_slice(self.0.0.as_slice());
+        out
     }
 
     /// Convert a big-endian representation of the partial signature
     pub fn from_bytes(bytes: &[u8; Self::BYTES]) -> Self {
-        Self(Share(*bytes))
+        let mut inner = Vec::new();
+        inner.extend_from_slice(bytes).unwrap();
+        Self(Share(inner))
     }
 }
 
