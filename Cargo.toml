@@ -1,6 +1,6 @@
 [package]
 name = "blsful"
-version = "1.2.0-pre1"
+version = "1.2.0"
 authors = ["Michael Lodder <redmike7@gmail.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
@@ -24,7 +24,7 @@ std = ["alloc", "iso8601-timestamp", "rand_core/std"]
 
 [dependencies]
 arrayref = { version = "0.3.6", optional = true }
-bls12_381_plus = "0.8.0-pre2"
+bls12_381_plus = "0.8"
 hex = { version = "0.4", default-features = false }
 hkdf = { version = "0.12", default-features = false }
 iso8601-timestamp = { version = "0.2", optional = true }
@@ -34,7 +34,7 @@ serde = { version = "1.0", default-features = false, features = ["derive"] }
 sha2 = { version = "0.10", default-features = false }
 subtle = { version = "2.4", default-features = false }
 vsss-rs = { version = "3.0.0-pre6", default-features = false, features = ["const-generics"] }
-zeroize = { version = "1.5", features = ["zeroize_derive"] }
+zeroize = { version = "1.6", features = ["zeroize_derive"] }
 
 [dev-dependencies]
 rand_xorshift = "0.3"
