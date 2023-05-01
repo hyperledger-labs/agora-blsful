@@ -1,5 +1,8 @@
 use crate::{PublicKey, Signature};
-use bls12_381_plus::{G1Affine, G1Projective, G2Affine, group::{Group, Curve}};
+use bls12_381_plus::{
+    group::{Curve, Group},
+    G1Affine, G1Projective, G2Affine,
+};
 use subtle::{Choice, CtOption};
 
 /// Represents a BLS signature in G1 for multiple signatures that signed the different messages
@@ -24,7 +27,7 @@ cond_select_impl!(AggregateSignature, G1Projective);
 
 impl AggregateSignature {
     /// Number of bytes needed to represent the signature
-    pub const BYTES: usize = 48;
+    pub const BYTES: usize = G1Projective::COMPRESSED_BYTES;
 
     validity_checks!();
 

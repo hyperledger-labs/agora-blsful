@@ -19,7 +19,7 @@ cond_select_impl!(ProofOfPossession, G1Projective);
 
 impl ProofOfPossession {
     /// Number of bytes needed to represent the proof
-    pub const BYTES: usize = 48;
+    pub const BYTES: usize = G1Projective::COMPRESSED_BYTES;
     /// The domain separation tag
     const DST: &'static [u8] = b"BLS_POP_BLS12381G1_XMD:SHA-256_SSWU_RO_POP_";
 
@@ -61,7 +61,7 @@ fn pop_works() {
 
     let seed = [2u8; 16];
     let mut rng = MockRng::from_seed(seed);
-    let sk = SecretKey::random(&mut rng).unwrap();
+    let sk = SecretKey::random(&mut rng);
     let pop = ProofOfPossession::new(&sk).unwrap();
     let pk = PublicKey::from(&sk);
     assert_eq!(pop.verify(pk).unwrap_u8(), 1);

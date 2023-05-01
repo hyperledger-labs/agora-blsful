@@ -1,5 +1,5 @@
 use crate::{MultiPublicKeyVt, PublicKeyVt, SignatureVt};
-use bls12_381_plus::{G2Affine, G2Projective, group::Curve};
+use bls12_381_plus::{group::Curve, G2Affine, G2Projective};
 use subtle::{Choice, CtOption};
 
 /// Represents a BLS SignatureVt in G1 for multiple SignatureVts that signed the same message
@@ -24,7 +24,7 @@ cond_select_impl!(MultiSignatureVt, G2Projective);
 
 impl MultiSignatureVt {
     /// Number of bytes needed to represent the SignatureVt
-    pub const BYTES: usize = 96;
+    pub const BYTES: usize = G2Projective::COMPRESSED_BYTES;
 
     validity_checks!();
 

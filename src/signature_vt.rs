@@ -1,13 +1,13 @@
 use crate::partial_signature_vt::PARTIAL_SIGNATURE_VT_BYTES;
 use crate::{PartialSignatureVt, PublicKeyVt, SecretKey};
 use bls12_381_plus::{
-    multi_miller_loop, G1Affine, G2Affine, G2Prepared, G2Projective, Scalar,
+    elliptic_curve::hash2curve::ExpandMsgXmd,
     ff::Field,
     group::{Curve, Group},
-    elliptic_curve::hash2curve::ExpandMsgXmd,
+    multi_miller_loop, G1Affine, G2Affine, G2Prepared, G2Projective, Scalar,
 };
 use subtle::{Choice, CtOption};
-use vsss_rs::{Error, combine_shares_group_const_generics, const_generics::Share, heapless::Vec};
+use vsss_rs::{combine_shares_group_const_generics, const_generics::Share, heapless::Vec, Error};
 
 /// Represents a BLS SignatureVt in G1 using the proof of possession scheme
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -21,7 +21,7 @@ cond_select_impl!(SignatureVt, G2Projective);
 
 impl SignatureVt {
     /// Number of bytes needed to represent the SignatureVt
-    pub const BYTES: usize = 96;
+    pub const BYTES: usize = G2Projective::COMPRESSED_BYTES;
     /// The domain separation tag
     const DST: &'static [u8] = b"BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_POP_";
 
@@ -59,9 +59,7 @@ impl SignatureVt {
     }
 
     /// Combine partial signatures into a completed signature
-    pub fn from_partials(
-        partials: &[PartialSignatureVt],
-    ) -> Result<Self, Error> {
+    pub fn from_partials(partials: &[PartialSignatureVt]) -> Result<Self, Error> {
         if partials.len() < 2 {
             return Err(Error::SharingLimitLessThanThreshold);
         }
@@ -85,7 +83,7 @@ fn signature_vt_works() {
 
     let seed = [2u8; 16];
     let mut rng = MockRng::from_seed(seed);
-    let sk = SecretKey::random(&mut rng).unwrap();
+    let sk = SecretKey::random(&mut rng);
     let mut msg = [0u8; 12];
     rng.fill_bytes(&mut msg);
     let sig = SignatureVt::new(&sk, msg).unwrap();
@@ -100,7 +98,7 @@ fn threshold_works() {
 
     let seed = [3u8; 16];
     let mut rng = MockRng::from_seed(seed);
-    let sk = SecretKey::random(&mut rng).unwrap();
+    let sk = SecretKey::random(&mut rng);
     let pk = PublicKeyVt::from(&sk);
 
     let res_shares = sk.split(2, 3, &mut rng);

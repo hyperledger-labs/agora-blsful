@@ -1,5 +1,5 @@
 use crate::{ProofOfKnowledge, Signature};
-use bls12_381_plus::{G1Affine, G1Projective, Scalar, ff::Field, group::Curve};
+use bls12_381_plus::{ff::Field, group::Curve, G1Affine, G1Projective, Scalar};
 use subtle::{Choice, CtOption};
 
 /// The first step in proof of knowledge protocol
@@ -16,7 +16,7 @@ cond_select_impl!(ProofCommitment, G1Projective);
 
 impl ProofCommitment {
     /// Number of bytes needed to represent this commitment
-    pub const BYTES: usize = 48;
+    pub const BYTES: usize = G1Projective::COMPRESSED_BYTES;
 
     #[cfg(feature = "std")]
     /// Create a zero-knowledge proof of a valid signature

@@ -1,11 +1,8 @@
 use crate::{SecretKeyShare, Signature};
-use bls12_381_plus::{G1Affine, G1Projective, Scalar, group::Curve};
+use bls12_381_plus::{group::Curve, G1Affine, G1Projective, Scalar};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use subtle::Choice;
-use vsss_rs::{
-    const_generics::Share,
-    heapless::Vec,
-};
+use vsss_rs::{const_generics::Share, heapless::Vec};
 
 /// Represents a BLS partial signature in G1 using the proof of possession scheme
 #[derive(Clone, Debug, Default)]
@@ -59,7 +56,9 @@ impl PartialSignature {
             let point = a * s;
             let mut bytes = Vec::<u8, PARTIAL_SIGNATURE_BYTES>::new();
             bytes.push(sk.0.identifier()).unwrap();
-            bytes.extend_from_slice(&point.to_affine().to_compressed()).unwrap();
+            bytes
+                .extend_from_slice(&point.to_affine().to_compressed())
+                .unwrap();
             Some(PartialSignature(Share(bytes)))
         });
         if res.is_some().unwrap_u8() == 1 {
@@ -88,7 +87,7 @@ impl PartialSignature {
     /// Get the byte sequence that represents this partial signature
     pub fn to_bytes(&self) -> [u8; Self::BYTES] {
         let mut out = [0u8; Self::BYTES];
-        out.copy_from_slice(self.0.0.as_slice());
+        out.copy_from_slice(self.0 .0.as_slice());
         out
     }
 
@@ -100,4 +99,4 @@ impl PartialSignature {
     }
 }
 
-pub(crate) const PARTIAL_SIGNATURE_BYTES: usize = 49;
+pub(crate) const PARTIAL_SIGNATURE_BYTES: usize = G1Projective::COMPRESSED_BYTES + 1;

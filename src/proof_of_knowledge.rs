@@ -2,7 +2,7 @@ use crate::{PublicKey, Signature};
 use bls12_381_plus::{
     ff::Field,
     group::{Curve, Group},
-    multi_miller_loop, G1Affine, G1Projective, G2Affine, G2Prepared, Scalar
+    multi_miller_loop, G1Affine, G1Projective, G2Affine, G2Prepared, Scalar,
 };
 use core::fmt::{self, Display, Formatter};
 use serde::{Deserialize, Serialize};
@@ -34,7 +34,7 @@ impl ConditionallySelectable for ProofOfKnowledge {
 
 impl ProofOfKnowledge {
     /// The number of bytes required for this proof
-    pub const BYTES: usize = 96;
+    pub const BYTES: usize = G1Projective::COMPRESSED_BYTES * 2;
 
     /// Check if this is valid
     pub fn is_valid(&self) -> Choice {
@@ -76,12 +76,14 @@ impl ProofOfKnowledge {
 
     /// Convert a big-endian representation
     pub fn from_bytes(bytes: &[u8; Self::BYTES]) -> CtOption<Self> {
-        let uu =
-            G1Affine::from_compressed(&<[u8; 48]>::try_from(&bytes[..Self::BYTES / 2]).unwrap())
-                .map(G1Projective::from);
-        let vv =
-            G1Affine::from_compressed(&<[u8; 48]>::try_from(&bytes[Self::BYTES / 2..]).unwrap())
-                .map(G1Projective::from);
+        let uu = G1Affine::from_compressed(
+            &<[u8; G1Projective::COMPRESSED_BYTES]>::try_from(&bytes[..Self::BYTES / 2]).unwrap(),
+        )
+        .map(G1Projective::from);
+        let vv = G1Affine::from_compressed(
+            &<[u8; G1Projective::COMPRESSED_BYTES]>::try_from(&bytes[Self::BYTES / 2..]).unwrap(),
+        )
+        .map(G1Projective::from);
         uu.and_then(|u| vv.and_then(|v| CtOption::new(Self { u, v }, Choice::from(1u8))))
     }
 
@@ -204,7 +206,7 @@ fn proof_works() {
     use rand_core::SeedableRng;
 
     let mut rng = MockRng::from_seed([3u8; 16]);
-    let sk = SecretKey::hash(b"proof_test").unwrap();
+    let sk = SecretKey::hash(b"proof_test");
     let pk = PublicKey::from(&sk);
     let msg = b"proof_test_msg";
     let sig = Signature::new(&sk, msg).unwrap();
@@ -215,7 +217,7 @@ fn proof_works() {
     let opt_commitment = ProofCommitment::from_msg_with_x(msg, x);
     assert!(opt_commitment.is_some());
     let commitment = opt_commitment.unwrap();
-    let opt_proof =  commitment.complete(x, y, sig);
+    let opt_proof = commitment.complete(x, y, sig);
     assert!(opt_proof.is_some());
     let mut proof = opt_proof.unwrap();
     assert_eq!(proof.verify(pk, msg, y).unwrap_u8(), 1u8);

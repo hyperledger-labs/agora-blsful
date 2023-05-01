@@ -19,7 +19,7 @@ cond_select_impl!(ProofOfPossessionVt, G2Projective);
 
 impl ProofOfPossessionVt {
     /// Number of bytes needed to represent the proof
-    pub const BYTES: usize = 96;
+    pub const BYTES: usize = G2Projective::COMPRESSED_BYTES;
     /// The domain separation tag
     const DST: &'static [u8] = b"BLS_POP_BLS12381G2_XMD:SHA-256_SSWU_RO_POP_";
 
@@ -61,7 +61,7 @@ fn pop_vt_works() {
 
     let seed = [2u8; 16];
     let mut rng = MockRng::from_seed(seed);
-    let sk = SecretKey::random(&mut rng).unwrap();
+    let sk = SecretKey::random(&mut rng);
     let pop = ProofOfPossessionVt::new(&sk).unwrap();
     let pk = PublicKeyVt::from(&sk);
     assert_eq!(pop.verify(pk).unwrap_u8(), 1);

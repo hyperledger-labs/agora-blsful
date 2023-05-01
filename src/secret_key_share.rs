@@ -1,7 +1,5 @@
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use vsss_rs::{
-    const_generics::Share, heapless,
-};
+use vsss_rs::{const_generics::Share, heapless};
 use zeroize::ZeroizeOnDrop;
 
 /// A secret key share is field element 0 < `x` < `r`
@@ -73,7 +71,7 @@ impl SecretKeyShare {
     /// Get the byte representation of this key
     pub fn to_bytes(&self) -> [u8; Self::BYTES] {
         let mut bytes = [0u8; Self::BYTES];
-        bytes.copy_from_slice(&self.0.0);
+        bytes.copy_from_slice(&self.0 .0);
         bytes
     }
 
@@ -85,4 +83,4 @@ impl SecretKeyShare {
     }
 }
 
-pub(crate) const SECRET_KEY_SHARE_BYTES: usize = 33;
+pub(crate) const SECRET_KEY_SHARE_BYTES: usize = bls12_381_plus::Scalar::BYTES + 1;

@@ -7,7 +7,7 @@ use bls12_381_plus::{
     multi_miller_loop, G1Affine, G1Projective, G2Affine, G2Prepared, Scalar,
 };
 use subtle::{Choice, CtOption};
-use vsss_rs::{Error, const_generics::Share, combine_shares_group_const_generics, heapless::Vec};
+use vsss_rs::{combine_shares_group_const_generics, const_generics::Share, heapless::Vec, Error};
 
 /// Represents a BLS signature in G1 using the proof of possession scheme
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -21,7 +21,7 @@ cond_select_impl!(Signature, G1Projective);
 
 impl Signature {
     /// Number of bytes needed to represent the signature
-    pub const BYTES: usize = 48;
+    pub const BYTES: usize = G1Projective::COMPRESSED_BYTES;
     /// The domain separation tag
     const DST: &'static [u8] = b"BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_POP_";
 
@@ -59,9 +59,7 @@ impl Signature {
     }
 
     /// Combine partial signatures into a completed signature
-    pub fn from_partials(
-        partials: &[PartialSignature],
-    ) -> Result<Self, Error> {
+    pub fn from_partials(partials: &[PartialSignature]) -> Result<Self, Error> {
         if partials.len() < 2 {
             return Err(Error::SharingLimitLessThanThreshold);
         }
@@ -84,7 +82,7 @@ fn signature_works() {
 
     let seed = [2u8; 16];
     let mut rng = MockRng::from_seed(seed);
-    let sk = SecretKey::random(&mut rng).unwrap();
+    let sk = SecretKey::random(&mut rng);
     let mut msg = [0u8; 12];
     rng.fill_bytes(&mut msg);
     let sig = Signature::new(&sk, msg).unwrap();
@@ -99,7 +97,7 @@ fn threshold_works() {
 
     let seed = [3u8; 16];
     let mut rng = MockRng::from_seed(seed);
-    let sk = SecretKey::random(&mut rng).unwrap();
+    let sk = SecretKey::random(&mut rng);
     let pk = PublicKey::from(&sk);
 
     let res_shares = sk.split(2, 3, &mut rng);

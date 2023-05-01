@@ -1,5 +1,5 @@
 use crate::PublicKeyVt;
-use bls12_381_plus::{G1Affine, G1Projective, group::Curve};
+use bls12_381_plus::{group::Curve, G1Affine, G1Projective};
 use subtle::{Choice, CtOption};
 
 /// Represents multiple public keys into one that can be used to verify multisignatures
@@ -24,7 +24,7 @@ cond_select_impl!(MultiPublicKeyVt, G1Projective);
 
 impl MultiPublicKeyVt {
     /// Number of bytes needed to represent the multi public key
-    pub const BYTES: usize = 48;
+    pub const BYTES: usize = G1Projective::COMPRESSED_BYTES;
 
     validity_checks!();
 

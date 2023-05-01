@@ -1,5 +1,5 @@
 use crate::{MultiPublicKey, PublicKey, Signature};
-use bls12_381_plus::{G1Affine, G1Projective, group::Curve};
+use bls12_381_plus::{group::Curve, G1Affine, G1Projective};
 use subtle::{Choice, CtOption};
 
 /// Represents a BLS signature in G1 for multiple signatures that signed the same message
@@ -24,7 +24,7 @@ cond_select_impl!(MultiSignature, G1Projective);
 
 impl MultiSignature {
     /// Number of bytes needed to represent the signature
-    pub const BYTES: usize = 48;
+    pub const BYTES: usize = G1Projective::COMPRESSED_BYTES;
 
     validity_checks!();
 

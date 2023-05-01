@@ -1,11 +1,13 @@
-use crate::{secret_key_share::SECRET_KEY_SHARE_BYTES, SecretKeyShare};
+use crate::{hash_fr, secret_key_share::SECRET_KEY_SHARE_BYTES, SecretKeyShare};
 use bls12_381_plus::Scalar;
-use hkdf::HkdfExtract;
 use rand_core::{CryptoRng, RngCore};
 use subtle::CtOption;
-use vsss_rs::{Error, shamir::{
-    split_secret_const_generics, combine_shares_const_generics,
-}, const_generics::Share, heapless::Vec};
+use vsss_rs::{
+    const_generics::Share,
+    heapless::Vec,
+    shamir::{combine_shares_const_generics, split_secret_const_generics},
+    Error,
+};
 use zeroize::Zeroize;
 
 /// The secret key is field element 0 < `x` < `r`
@@ -34,12 +36,12 @@ impl SecretKey {
     pub const BYTES: usize = 32;
 
     /// Compute a secret key from a hash
-    pub fn hash<B: AsRef<[u8]>>(data: B) -> Option<Self> {
+    pub fn hash<B: AsRef<[u8]>>(data: B) -> Self {
         generate_secret_key(data.as_ref())
     }
 
     /// Compute a secret key from a CS-PRNG
-    pub fn random(mut rng: impl RngCore + CryptoRng) -> Option<Self> {
+    pub fn random(mut rng: impl RngCore + CryptoRng) -> Self {
         let mut data = [0u8; Self::BYTES];
         rng.fill_bytes(&mut data);
         generate_secret_key(&data)
@@ -69,16 +71,14 @@ impl SecretKey {
         limit: usize,
         rng: &mut R,
     ) -> Result<Vec<SecretKeyShare, 255>, Error> {
-        let shares = split_secret_const_generics::<_, _, SECRET_KEY_SHARE_BYTES>(threshold, limit, self.0, rng)?;
-        Ok(shares.iter().map(|s| {
-            SecretKeyShare(s.clone())
-        }).collect())
+        let shares = split_secret_const_generics::<_, _, SECRET_KEY_SHARE_BYTES>(
+            threshold, limit, self.0, rng,
+        )?;
+        Ok(shares.iter().map(|s| SecretKeyShare(s.clone())).collect())
     }
 
     /// Reconstruct a secret from shares created from `split`
-    pub fn combine(
-        shares: &[SecretKeyShare],
-    ) -> Result<SecretKey, Error> {
+    pub fn combine(shares: &[SecretKeyShare]) -> Result<SecretKey, Error> {
         if shares.len() < 2 {
             return Err(Error::SharingLimitLessThanThreshold);
         }
@@ -91,19 +91,7 @@ impl SecretKey {
     }
 }
 
-fn generate_secret_key(ikm: &[u8]) -> Option<SecretKey> {
+fn generate_secret_key(ikm: &[u8]) -> SecretKey {
     const SALT: &[u8] = b"BLS-SIG-KEYGEN-SALT-";
-    const INFO: [u8; 2] = [0u8, 48u8];
-
-    let mut extractor = HkdfExtract::<sha2::Sha256>::new(Some(SALT));
-    extractor.input_ikm(ikm);
-    extractor.input_ikm(&[0u8]);
-    let (_, h) = extractor.finalize();
-
-    let mut output = [0u8; 48];
-    if h.expand(&INFO, &mut output).is_err() {
-        None
-    } else {
-        Some(SecretKey(Scalar::from_okm(&output)))
-    }
+    SecretKey(hash_fr(Some(SALT), ikm))
 }
