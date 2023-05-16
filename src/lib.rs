@@ -7,11 +7,6 @@
 //!
 //! Normal puts signatures in G1 and pubic keys in G2.
 //! Variant is the reverse.
-//!
-//! This crate has been designed to be compliant with no-std by avoiding allocations
-//!
-//! but provides some optimizations when an allocator exists for verifying
-//! aggregated signatures.
 #![deny(unsafe_code)]
 #![warn(
     missing_docs,
@@ -20,152 +15,168 @@
     unused_import_braces,
     unused_qualifications
 )]
-#![cfg_attr(not(feature = "std"), no_std)]
 
-#[cfg(feature = "std")]
-extern crate std;
+mod helpers;
+mod impls;
+mod traits;
 
-#[cfg(all(feature = "alloc", not(feature = "std")))]
-extern crate alloc;
-
-pub(crate) mod libs {
-    #[cfg(all(feature = "alloc", not(feature = "std")))]
-    pub use alloc::vec;
-    #[cfg(all(feature = "alloc", not(feature = "std")))]
-    pub use alloc::vec::Vec;
-
-    #[cfg(feature = "std")]
-    pub use std::vec;
-    #[cfg(feature = "std")]
-    pub use std::vec::Vec;
-
-    use rand_chacha::ChaCha20Rng;
-    use rand_core::SeedableRng;
-
-    pub fn byte_xor(arr1: &[u8], arr2: &[u8]) -> Vec<u8> {
-        debug_assert_eq!(arr1.len(), arr2.len());
-        let mut o = Vec::with_capacity(arr1.len());
-        for (a, b) in arr1.iter().zip(arr2.iter()) {
-            o.push(*a ^ *b)
-        }
-        o
-    }
-
-    pub fn get_crypto_rng() -> ChaCha20Rng {
-        ChaCha20Rng::from_entropy()
-    }
-}
-
-#[macro_use]
-mod macros;
+use helpers::*;
+use traits::*;
 
 mod aggregate_signature;
-mod aggregate_signature_vt;
+mod error;
 mod multi_public_key;
-mod multi_public_key_vt;
 mod multi_signature;
-mod multi_signature_vt;
-mod partial_signature;
-mod partial_signature_vt;
 mod proof_commitment;
-mod proof_commitment_vt;
 mod proof_of_knowledge;
-mod proof_of_knowledge_vt;
 mod proof_of_possession;
-mod proof_of_possession_vt;
 mod public_key;
-mod public_key_vt;
+mod public_key_share;
 mod secret_key;
 mod secret_key_share;
-#[cfg(any(feature = "alloc", feature = "std"))]
+mod sig_types;
 mod sign_crypt_ciphertext;
+mod sign_decryption_share;
 mod signature;
-mod signature_vt;
+mod signature_share;
+mod time_crypt_ciphertext;
+
+pub use error::*;
+pub use impls::*;
 
 pub use aggregate_signature::*;
-pub use aggregate_signature_vt::*;
 pub use multi_public_key::*;
-pub use multi_public_key_vt::*;
 pub use multi_signature::*;
-pub use multi_signature_vt::*;
-pub use partial_signature::*;
-pub use partial_signature_vt::*;
 pub use proof_commitment::*;
-pub use proof_commitment_vt::*;
 pub use proof_of_knowledge::*;
-pub use proof_of_knowledge_vt::*;
 pub use proof_of_possession::*;
-pub use proof_of_possession_vt::*;
 pub use public_key::*;
-pub use public_key_vt::*;
+pub use public_key_share::*;
 pub use secret_key::*;
 pub use secret_key_share::*;
-#[cfg(any(feature = "alloc", feature = "std"))]
+pub use sig_types::*;
 pub use sign_crypt_ciphertext::*;
+pub use sign_decryption_share::*;
 pub use signature::*;
-pub use signature_vt::*;
+pub use signature_share::*;
+pub use time_crypt_ciphertext::*;
 
 pub use bls12_381_plus;
 pub use vsss_rs;
 
-use bls12_381_plus::Scalar;
-use rand_core::{CryptoRng, RngCore};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use subtle::Choice;
+use vsss_rs::Share;
+use zeroize::Zeroize;
 
-pub(crate) fn hash_fr(salt: Option<&[u8]>, ikm: &[u8]) -> Scalar {
-    const INFO: [u8; 2] = [0u8, 48u8];
+/// The share type for points in G1
+#[derive(
+    Copy, Clone, Debug, PartialEq, Eq, Hash, Ord, PartialOrd, Zeroize, Serialize, Deserialize,
+)]
+pub struct InnerPointShareG1(
+    /// The inner share representation
+    #[serde(with = "fixed_arr::BigArray")]
+    pub [u8; 49],
+);
 
-    let mut extractor = hkdf::HkdfExtract::<sha2::Sha256>::new(salt);
-    extractor.input_ikm(ikm);
-    extractor.input_ikm(&[0u8]);
-    let (_, h) = extractor.finalize();
-
-    let mut output = [0u8; 48];
-    let mut s = Scalar::ZERO;
-    // Odds of this happening are extremely low but check anyway
-    while s == Scalar::ZERO {
-        // Unwrap allowed since 48 is a valid length
-        h.expand(&INFO, &mut output).unwrap();
-        s = Scalar::from_okm(&output);
-    }
-    s
-}
-
-pub(crate) fn random_nz_fr(salt: Option<&[u8]>, mut rng: impl RngCore + CryptoRng) -> Scalar {
-    let mut ikm = [0u8; 32];
-    rng.fill_bytes(&mut ikm);
-    hash_fr(salt, &ikm)
-}
-
-#[cfg(test)]
-pub struct MockRng(rand_xorshift::XorShiftRng);
-
-#[cfg(test)]
-impl rand_core::SeedableRng for MockRng {
-    type Seed = [u8; 16];
-
-    fn from_seed(seed: Self::Seed) -> Self {
-        Self(rand_xorshift::XorShiftRng::from_seed(seed))
+impl subtle::ConditionallySelectable for InnerPointShareG1 {
+    fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
+        let mut result = [0u8; 49];
+        for (i, r) in result.iter_mut().enumerate() {
+            *r = u8::conditional_select(&a.0[i], &b.0[i], choice);
+        }
+        InnerPointShareG1(result)
     }
 }
 
-#[cfg(test)]
-impl CryptoRng for MockRng {}
+impl Default for InnerPointShareG1 {
+    fn default() -> Self {
+        Self([0u8; 49])
+    }
+}
 
-#[cfg(test)]
-impl RngCore for MockRng {
-    fn next_u32(&mut self) -> u32 {
-        self.0.next_u32()
+impl core::fmt::Display for InnerPointShareG1 {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{}", hex::encode(self.0))
+    }
+}
+
+impl Share for InnerPointShareG1 {
+    type Identifier = u8;
+
+    fn empty_share_with_capacity(_size_hint: usize) -> Self {
+        Self([0u8; 49])
     }
 
-    fn next_u64(&mut self) -> u64 {
-        self.0.next_u64()
+    fn identifier(&self) -> Self::Identifier {
+        self.0[0]
     }
 
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        self.0.fill_bytes(dest)
+    fn identifier_mut(&mut self) -> &mut Self::Identifier {
+        &mut self.0[0]
     }
 
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), rand_core::Error> {
-        self.0.try_fill_bytes(dest)
+    fn value(&self) -> &[u8] {
+        &self.0[1..]
+    }
+
+    fn value_mut(&mut self) -> &mut [u8] {
+        &mut self.0[1..]
+    }
+}
+
+/// The share type for points in G2
+#[derive(
+    Copy, Clone, Debug, PartialEq, Eq, Hash, Ord, PartialOrd, Zeroize, Serialize, Deserialize,
+)]
+pub struct InnerPointShareG2(
+    /// The inner share representation
+    #[serde(with = "fixed_arr::BigArray")]
+    pub [u8; 97],
+);
+
+impl subtle::ConditionallySelectable for InnerPointShareG2 {
+    fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
+        let mut result = [0u8; 97];
+        for (i, r) in result.iter_mut().enumerate() {
+            *r = u8::conditional_select(&a.0[i], &b.0[i], choice);
+        }
+        InnerPointShareG2(result)
+    }
+}
+
+impl Default for InnerPointShareG2 {
+    fn default() -> Self {
+        Self([0u8; 97])
+    }
+}
+
+impl core::fmt::Display for InnerPointShareG2 {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{}", hex::encode(self.0))
+    }
+}
+
+impl Share for InnerPointShareG2 {
+    type Identifier = u8;
+
+    fn empty_share_with_capacity(_size_hint: usize) -> Self {
+        Self([0u8; 97])
+    }
+
+    fn identifier(&self) -> Self::Identifier {
+        self.0[0]
+    }
+
+    fn identifier_mut(&mut self) -> &mut Self::Identifier {
+        &mut self.0[0]
+    }
+
+    fn value(&self) -> &[u8] {
+        &self.0[1..]
+    }
+
+    fn value_mut(&mut self) -> &mut [u8] {
+        &mut self.0[1..]
     }
 }

@@ -1,68 +1,334 @@
-use crate::{ProofOfKnowledge, Signature};
-use bls12_381_plus::{ff::Field, group::Curve, G1Affine, G1Projective, Scalar};
-use subtle::{Choice, CtOption};
+use crate::*;
+use bls12_381_plus::elliptic_curve::{Group, PrimeField};
+use rand::Rng;
+use rand_core::{CryptoRng, RngCore};
+use subtle::CtOption;
 
-/// The first step in proof of knowledge protocol
-/// where the client sends this commitment first
-/// then the verifier sends the challenge
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct ProofCommitment(pub G1Projective);
+/// The commitment portion of the signature proof of knowledge
+#[derive(PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum ProofCommitment<
+    C: BlsSignatureBasic
+        + BlsSignatureMessageAugmentation
+        + BlsSignaturePop
+        + BlsSignCrypt
+        + BlsTimeCrypt
+        + BlsSignatureProof
+        + BlsSerde,
+> {
+    /// The basic signature scheme
+    Basic(
+        /// The commitment
+        #[serde(serialize_with = "traits::signature::serialize::<C, _>")]
+        #[serde(deserialize_with = "traits::signature::deserialize::<C, _>")]
+        <C as Pairing>::Signature,
+    ),
+    /// The message augmentation signature scheme
+    MessageAugmentation(
+        /// The commitment
+        #[serde(serialize_with = "traits::signature::serialize::<C, _>")]
+        #[serde(deserialize_with = "traits::signature::deserialize::<C, _>")]
+        <C as Pairing>::Signature,
+    ),
+    /// The proof of possession signature scheme
+    ProofOfPossession(
+        /// The commitment
+        #[serde(serialize_with = "traits::signature::serialize::<C, _>")]
+        #[serde(deserialize_with = "traits::signature::deserialize::<C, _>")]
+        <C as Pairing>::Signature,
+    ),
+}
 
-display_one_impl!(ProofCommitment);
+impl<
+        C: BlsSignatureBasic
+            + BlsSignatureMessageAugmentation
+            + BlsSignaturePop
+            + BlsSignCrypt
+            + BlsTimeCrypt
+            + BlsSignatureProof
+            + BlsSerde,
+    > Default for ProofCommitment<C>
+{
+    fn default() -> Self {
+        Self::ProofOfPossession(<C as Pairing>::Signature::default())
+    }
+}
 
-serde_impl!(ProofCommitment, G1Projective);
+impl<
+        C: BlsSignatureBasic
+            + BlsSignatureMessageAugmentation
+            + BlsSignaturePop
+            + BlsSignCrypt
+            + BlsTimeCrypt
+            + BlsSignatureProof
+            + BlsSerde,
+    > core::fmt::Display for ProofCommitment<C>
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        match self {
+            Self::Basic(s) => write!(f, "Basic({})", s),
+            Self::MessageAugmentation(s) => write!(f, "MessageAugmentation({})", s),
+            Self::ProofOfPossession(s) => write!(f, "ProofOfPossession({})", s),
+        }
+    }
+}
 
-cond_select_impl!(ProofCommitment, G1Projective);
+impl<
+        C: BlsSignatureBasic
+            + BlsSignatureMessageAugmentation
+            + BlsSignaturePop
+            + BlsSignCrypt
+            + BlsTimeCrypt
+            + BlsSignatureProof
+            + BlsSerde,
+    > core::fmt::Debug for ProofCommitment<C>
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        match self {
+            Self::Basic(s) => write!(f, "Basic({:?})", s),
+            Self::MessageAugmentation(s) => write!(f, "MessageAugmentation({:?})", s),
+            Self::ProofOfPossession(s) => write!(f, "ProofOfPossession({:?})", s),
+        }
+    }
+}
 
-impl ProofCommitment {
-    /// Number of bytes needed to represent this commitment
-    pub const BYTES: usize = G1Projective::COMPRESSED_BYTES;
+impl<
+        C: BlsSignatureBasic
+            + BlsSignatureMessageAugmentation
+            + BlsSignaturePop
+            + BlsSignCrypt
+            + BlsTimeCrypt
+            + BlsSignatureProof
+            + BlsSerde,
+    > Copy for ProofCommitment<C>
+{
+}
 
-    #[cfg(feature = "std")]
-    /// Create a zero-knowledge proof of a valid signature
-    /// `x` is a random Scalar and should be kept private
-    /// The commitment is then sent to the verifier to receive
-    /// a challenge
-    pub fn from_msg<B: AsRef<[u8]>>(msg: B) -> Option<(Self, Scalar)> {
-        let x = Scalar::random(rand_core::OsRng);
-        let pok = Self::from_msg_with_x(msg, x)?;
-        Some((pok, x))
+impl<
+        C: BlsSignatureBasic
+            + BlsSignatureMessageAugmentation
+            + BlsSignaturePop
+            + BlsSignCrypt
+            + BlsTimeCrypt
+            + BlsSignatureProof
+            + BlsSerde,
+    > Clone for ProofCommitment<C>
+{
+    fn clone(&self) -> Self {
+        match self {
+            Self::Basic(s) => Self::Basic(*s),
+            Self::MessageAugmentation(s) => Self::MessageAugmentation(*s),
+            Self::ProofOfPossession(s) => Self::ProofOfPossession(*s),
+        }
+    }
+}
+
+impl<
+        C: BlsSignatureBasic
+            + BlsSignatureMessageAugmentation
+            + BlsSignaturePop
+            + BlsSignCrypt
+            + BlsTimeCrypt
+            + BlsSignatureProof
+            + BlsSerde,
+    > subtle::ConditionallySelectable for ProofCommitment<C>
+{
+    fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
+        match (a, b) {
+            (Self::Basic(a), Self::Basic(b)) => {
+                Self::Basic(<C as Pairing>::Signature::conditional_select(a, b, choice))
+            }
+            (Self::MessageAugmentation(a), Self::MessageAugmentation(b)) => {
+                Self::MessageAugmentation(<C as Pairing>::Signature::conditional_select(
+                    a, b, choice,
+                ))
+            }
+            (Self::ProofOfPossession(a), Self::ProofOfPossession(b)) => {
+                Self::ProofOfPossession(<C as Pairing>::Signature::conditional_select(a, b, choice))
+            }
+            _ => panic!("Cannot conditional select between different proof commitments"),
+        }
+    }
+}
+
+impl<
+        C: BlsSignatureBasic
+            + BlsSignatureMessageAugmentation
+            + BlsSignaturePop
+            + BlsSignCrypt
+            + BlsTimeCrypt
+            + BlsSignatureProof
+            + BlsSerde,
+    > ProofCommitment<C>
+{
+    /// Generate a new proof of knowledge commitment
+    /// This is step 1 in the 3 step process
+    pub fn generate<B: AsRef<[u8]>>(
+        msg: B,
+        signature: Signature<C>,
+    ) -> BlsResult<(Self, ProofCommitmentSecret<C>)> {
+        match signature {
+            Signature::Basic(_) => {
+                let (u, x) = <C as BlsSignatureProof>::generate_commitment(
+                    msg,
+                    <C as BlsSignatureBasic>::DST,
+                )?;
+                Ok((Self::Basic(u), ProofCommitmentSecret(x)))
+            }
+            Signature::MessageAugmentation(_) => {
+                let (u, x) = <C as BlsSignatureProof>::generate_commitment(
+                    msg,
+                    <C as BlsSignatureMessageAugmentation>::DST,
+                )?;
+                Ok((Self::MessageAugmentation(u), ProofCommitmentSecret(x)))
+            }
+            Signature::ProofOfPossession(_) => {
+                let (u, x) = <C as BlsSignatureProof>::generate_commitment(
+                    msg,
+                    <C as BlsSignaturePop>::SIG_DST,
+                )?;
+                Ok((Self::ProofOfPossession(u), ProofCommitmentSecret(x)))
+            }
+        }
     }
 
-    /// Create a zero-knowledge proof of a valid signature
-    /// `x` should be a random Scalar and kept private
-    /// The commitment is then sent to the verifier in order to receive
-    /// a challenge
-    pub fn from_msg_with_x<B: AsRef<[u8]>>(msg: B, x: Scalar) -> Option<Self> {
-        if x.is_zero().unwrap_u8() == 1u8 {
-            return None;
+    /// Finish the commitment value by converting it into a proof of knowledge
+    /// Step 3 in the 3 step process
+    pub fn finalize(
+        self,
+        x: ProofCommitmentSecret<C>,
+        y: ProofCommitmentChallenge<C>,
+        sig: Signature<C>,
+    ) -> BlsResult<ProofOfKnowledge<C>> {
+        match (self, sig) {
+            (Self::Basic(u), Signature::Basic(s)) => {
+                let (u, v) = <C as BlsSignatureProof>::generate_proof(u, x.0, y.0, s)?;
+                Ok(ProofOfKnowledge::Basic { u, v })
+            }
+            (Self::MessageAugmentation(u), Signature::MessageAugmentation(s)) => {
+                let (u, v) = <C as BlsSignatureProof>::generate_proof(u, x.0, y.0, s)?;
+                Ok(ProofOfKnowledge::MessageAugmentation { u, v })
+            }
+            (Self::ProofOfPossession(u), Signature::ProofOfPossession(s)) => {
+                let (u, v) = <C as BlsSignatureProof>::generate_proof(u, x.0, y.0, s)?;
+                Ok(ProofOfKnowledge::ProofOfPossession { u, v })
+            }
+            (_, _) => Err(BlsError::InvalidProof),
         }
-        let a = Signature::hash_msg(msg.as_ref());
-        if a.is_identity().unwrap_u8() == 1u8 {
-            return None;
-        }
-        let u = a * x;
-        if u.is_identity().unwrap_u8() == 1u8 {
-            return None;
-        }
-        Some(Self(u))
+    }
+}
+
+/// A commitment secret used to create the proof of knowledge
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
+pub struct ProofCommitmentSecret<
+    C: BlsSignatureBasic
+        + BlsSignatureMessageAugmentation
+        + BlsSignaturePop
+        + BlsSignCrypt
+        + BlsTimeCrypt
+        + BlsSignatureProof
+        + BlsSerde,
+>(
+    /// The commitment secret raw value
+    #[serde(serialize_with = "traits::scalar::serialize::<C, _>")]
+    #[serde(deserialize_with = "traits::scalar::deserialize::<C, _>")]
+    pub <<C as Pairing>::PublicKey as Group>::Scalar,
+);
+
+impl<
+        C: BlsSignatureBasic
+            + BlsSignatureMessageAugmentation
+            + BlsSignaturePop
+            + BlsSignCrypt
+            + BlsTimeCrypt
+            + BlsSignatureProof
+            + BlsSerde,
+    > ProofCommitmentSecret<C>
+{
+    /// Get the byte representation of this key
+    pub fn to_bytes(&self) -> [u8; SECRET_KEY_BYTES] {
+        let mut bytes = self.0.to_repr();
+        let ptr = bytes.as_mut();
+        // Make big endian
+        ptr.reverse();
+        <[u8; SECRET_KEY_BYTES]>::try_from(ptr).unwrap()
     }
 
-    validity_checks!();
+    /// Convert a big-endian representation of the secret key.
+    pub fn from_bytes(bytes: &[u8; SECRET_KEY_BYTES]) -> CtOption<Self> {
+        let mut repr =
+            <<<C as Pairing>::PublicKey as Group>::Scalar as PrimeField>::Repr::default();
+        let t = repr.as_mut();
+        t.copy_from_slice(bytes);
+        t.reverse();
+        <<C as Pairing>::PublicKey as Group>::Scalar::from_repr(repr).map(Self)
+    }
+}
 
-    bytes_impl!(G1Affine, G1Projective);
+/// The proof of knowledge challenge value generated by the server in
+/// step 2 of the proof generation process
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
+pub struct ProofCommitmentChallenge<
+    C: BlsSignatureBasic
+        + BlsSignatureMessageAugmentation
+        + BlsSignaturePop
+        + BlsSignCrypt
+        + BlsTimeCrypt
+        + BlsSignatureProof
+        + BlsSerde,
+>(
+    /// The commitment challenge raw value
+    #[serde(serialize_with = "traits::scalar::serialize::<C, _>")]
+    #[serde(deserialize_with = "traits::scalar::deserialize::<C, _>")]
+    pub <<C as Pairing>::PublicKey as Group>::Scalar,
+);
 
-    /// Complete the proof of knowledge once the challenge is received from the verifier
-    /// after the commitment was sent
-    pub fn complete(self, x: Scalar, y: Scalar, sig: Signature) -> Option<ProofOfKnowledge> {
-        if (self.is_invalid() | sig.is_invalid() | x.is_zero() | y.is_zero()).unwrap_u8() == 1u8 {
-            return None;
-        }
+impl<
+        C: BlsSignatureBasic
+            + BlsSignatureMessageAugmentation
+            + BlsSignaturePop
+            + BlsSignCrypt
+            + BlsTimeCrypt
+            + BlsSignatureProof
+            + BlsSerde,
+    > ProofCommitmentChallenge<C>
+{
+    /// Create a new random secret key
+    pub fn new() -> Self {
+        Self::random(get_crypto_rng())
+    }
 
-        let v = sig.0 * (x + y);
-        if v.is_identity().unwrap_u8() == 1u8 {
-            return None;
-        }
-        Some(ProofOfKnowledge { u: self.0, v: -v })
+    /// Compute a secret key from a hash
+    pub fn from_hash<B: AsRef<[u8]>>(data: B) -> Self {
+        Self(<C as HashToScalar>::hash_to_scalar(
+            data.as_ref(),
+            KEYGEN_SALT,
+        ))
+    }
+
+    /// Compute a random challenge from a CS-PRNG
+    pub fn random(mut rng: impl RngCore + CryptoRng) -> Self {
+        Self(<C as HashToScalar>::hash_to_scalar(
+            rng.gen::<[u8; SECRET_KEY_BYTES]>(),
+            KEYGEN_SALT,
+        ))
+    }
+
+    /// Get the byte representation of this key
+    pub fn to_bytes(&self) -> [u8; SECRET_KEY_BYTES] {
+        let mut bytes = self.0.to_repr();
+        let ptr = bytes.as_mut();
+        // Make big endian
+        ptr.reverse();
+        <[u8; SECRET_KEY_BYTES]>::try_from(ptr).unwrap()
+    }
+
+    /// Convert a big-endian representation of the secret key.
+    pub fn from_bytes(bytes: &[u8; SECRET_KEY_BYTES]) -> CtOption<Self> {
+        let mut repr =
+            <<<C as Pairing>::PublicKey as Group>::Scalar as PrimeField>::Repr::default();
+        let t = repr.as_mut();
+        t.copy_from_slice(bytes);
+        t.reverse();
+        <<C as Pairing>::PublicKey as Group>::Scalar::from_repr(repr).map(Self)
     }
 }

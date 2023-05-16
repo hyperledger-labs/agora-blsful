@@ -1,39 +1,41 @@
 [package]
-name = "blsful"
-version = "1.2.0"
 authors = ["Michael Lodder <redmike7@gmail.com>"]
-edition = "2021"
-license = "MIT OR Apache-2.0"
-homepage = "https://github.com/mikelodder7/blsful"
-repository = "https://github.com/mikelodder7/blsful"
-documentation = "https://docs.rs/blsful"
-readme = "README.md"
 categories = [
     "cryptography",
     "authentication",
     "no-std",
     "algorithms",
 ]
-keywords = ["crypto", "signature", "signing", "bls"]
 description = """BLS signature implementation according to the IETF spec on the BLS12-381 curve."""
+documentation = "https://docs.rs/blsful"
+edition = "2021"
+homepage = "https://github.com/mikelodder7/blsful"
+keywords = ["crypto", "signature", "signing", "bls"]
+license = "MIT OR Apache-2.0"
+name = "blsful"
+readme = "README.md"
+repository = "https://github.com/mikelodder7/blsful"
+version = "2.0.0"
 
 [features]
-default = ["std"]
-alloc = ["arrayref"]
-std = ["alloc", "iso8601-timestamp", "rand_core/std"]
 
 [dependencies]
-arrayref = { version = "0.3.6", optional = true }
+anyhow = "1.0"
+arrayref = "0.3"
 bls12_381_plus = "0.8"
-hex = { version = "0.4", default-features = false }
+hex = "0.4"
 hkdf = { version = "0.12", default-features = false }
-iso8601-timestamp = { version = "0.2", optional = true }
 pairing = "0.23"
+rand = "0.8"
 rand_core = "0.6"
+rand_chacha = "0.3"
 serde = { version = "1.0", default-features = false, features = ["derive"] }
 sha2 = { version = "0.10", default-features = false }
+sha3 = { version = "0.10", default-features = false }
 subtle = { version = "2.4", default-features = false }
-vsss-rs = { version = "3.0.0-pre6", default-features = false, features = ["const-generics"] }
+thiserror = "1.0"
+uint-zigzag = { version = "0.2", features = ["std"] }
+vsss-rs = "3.0.0-rc.2"
 zeroize = { version = "1.6", features = ["zeroize_derive"] }
 
 [dev-dependencies]

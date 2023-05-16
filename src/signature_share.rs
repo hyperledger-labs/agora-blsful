@@ -1,9 +1,8 @@
 use crate::*;
-use subtle::ConditionallySelectable;
 
-/// A BLS signature wrapped in the appropriate scheme used to generate it
+/// Represents a share of a signature
 #[derive(PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub enum Signature<
+pub enum SignatureShare<
     C: BlsSignatureBasic
         + BlsSignatureMessageAugmentation
         + BlsSignaturePop
@@ -13,23 +12,11 @@ pub enum Signature<
         + BlsSerde,
 > {
     /// The basic signature scheme
-    Basic(
-        #[serde(serialize_with = "traits::signature::serialize::<C, _>")]
-        #[serde(deserialize_with = "traits::signature::deserialize::<C, _>")]
-        <C as Pairing>::Signature,
-    ),
+    Basic(<C as Pairing>::SignatureShare),
     /// The message augmentation signature scheme
-    MessageAugmentation(
-        #[serde(serialize_with = "traits::signature::serialize::<C, _>")]
-        #[serde(deserialize_with = "traits::signature::deserialize::<C, _>")]
-        <C as Pairing>::Signature,
-    ),
-    /// The proof of possession scheme
-    ProofOfPossession(
-        #[serde(serialize_with = "traits::signature::serialize::<C, _>")]
-        #[serde(deserialize_with = "traits::signature::deserialize::<C, _>")]
-        <C as Pairing>::Signature,
-    ),
+    MessageAugmentation(<C as Pairing>::SignatureShare),
+    /// The proof of possession signature scheme
+    ProofOfPossession(<C as Pairing>::SignatureShare),
 }
 
 impl<
@@ -40,10 +27,10 @@ impl<
             + BlsTimeCrypt
             + BlsSignatureProof
             + BlsSerde,
-    > Default for Signature<C>
+    > Default for SignatureShare<C>
 {
     fn default() -> Self {
-        Self::ProofOfPossession(<C as Pairing>::Signature::default())
+        Self::ProofOfPossession(<C as Pairing>::SignatureShare::empty_share_with_capacity(0))
     }
 }
 
@@ -55,7 +42,7 @@ impl<
             + BlsTimeCrypt
             + BlsSignatureProof
             + BlsSerde,
-    > core::fmt::Display for Signature<C>
+    > core::fmt::Display for SignatureShare<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
@@ -74,7 +61,7 @@ impl<
             + BlsTimeCrypt
             + BlsSignatureProof
             + BlsSerde,
-    > core::fmt::Debug for Signature<C>
+    > core::fmt::Debug for SignatureShare<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
@@ -93,7 +80,7 @@ impl<
             + BlsTimeCrypt
             + BlsSignatureProof
             + BlsSerde,
-    > Copy for Signature<C>
+    > Copy for SignatureShare<C>
 {
 }
 
@@ -105,7 +92,7 @@ impl<
             + BlsTimeCrypt
             + BlsSignatureProof
             + BlsSerde,
-    > Clone for Signature<C>
+    > Clone for SignatureShare<C>
 {
     fn clone(&self) -> Self {
         match self {
@@ -124,22 +111,22 @@ impl<
             + BlsTimeCrypt
             + BlsSignatureProof
             + BlsSerde,
-    > ConditionallySelectable for Signature<C>
+    > subtle::ConditionallySelectable for SignatureShare<C>
 {
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
         match (a, b) {
-            (Self::Basic(a), Self::Basic(b)) => {
-                Self::Basic(<C as Pairing>::Signature::conditional_select(a, b, choice))
-            }
+            (Self::Basic(a), Self::Basic(b)) => Self::Basic(
+                <C as Pairing>::SignatureShare::conditional_select(a, b, choice),
+            ),
             (Self::MessageAugmentation(a), Self::MessageAugmentation(b)) => {
-                Self::MessageAugmentation(<C as Pairing>::Signature::conditional_select(
+                Self::MessageAugmentation(<C as Pairing>::SignatureShare::conditional_select(
                     a, b, choice,
                 ))
             }
-            (Self::ProofOfPossession(a), Self::ProofOfPossession(b)) => {
-                Self::ProofOfPossession(<C as Pairing>::Signature::conditional_select(a, b, choice))
-            }
-            _ => panic!("Signature::conditional_select: mismatched variants"),
+            (Self::ProofOfPossession(a), Self::ProofOfPossession(b)) => Self::ProofOfPossession(
+                <C as Pairing>::SignatureShare::conditional_select(a, b, choice),
+            ),
+            _ => panic!("SignatureShare::conditional_select: mismatched variants"),
         }
     }
 }
@@ -152,45 +139,25 @@ impl<
             + BlsTimeCrypt
             + BlsSignatureProof
             + BlsSerde,
-    > Signature<C>
+    > SignatureShare<C>
 {
-    /// Verify the signature using the public key
-    pub fn verify<B: AsRef<[u8]>>(&self, pk: &PublicKey<C>, msg: B) -> BlsResult<()> {
-        match self {
-            Self::Basic(sig) => <C as BlsSignatureBasic>::verify(pk.0, *sig, msg),
-            Self::MessageAugmentation(sig) => {
-                <C as BlsSignatureMessageAugmentation>::verify(pk.0, *sig, msg)
-            }
-            Self::ProofOfPossession(sig) => <C as BlsSignaturePop>::verify(pk.0, *sig, msg),
-        }
+    /// Verify the signature share with the public key share
+    pub fn verify<B: AsRef<[u8]>>(&self, pks: &PublicKeyShare<C>, msg: B) -> BlsResult<()> {
+        pks.verify(self, msg)
     }
 
-    /// Determine if two signature were signed using the same scheme
-    pub fn same_scheme(&self, &other: &Self) -> bool {
-        matches!((self, other), (Self::Basic(_), Self::Basic(_))
-             | (Self::MessageAugmentation(_), Self::MessageAugmentation(_))
-             | (Self::ProofOfPossession(_), Self::ProofOfPossession(_)))
-    }
-
-    /// Create a signature from shares
-    pub fn from_shares(shares: &[SignatureShare<C>]) -> BlsResult<Self> {
-        if !shares.iter().skip(1).all(|s| s.same_scheme(&shares[0])) {
-            return Err(BlsError::InvalidSignatureScheme);
-        }
-        let points = shares
-            .iter()
-            .map(|s| *s.as_raw_value())
-            .collect::<Vec<<C as Pairing>::SignatureShare>>();
-        let sig = <C as BlsSignatureCore>::core_combine_signature_shares(&points)?;
-        match shares[0] {
-            SignatureShare::Basic(_) => Ok(Self::Basic(sig)),
-            SignatureShare::MessageAugmentation(_) => Ok(Self::MessageAugmentation(sig)),
-            SignatureShare::ProofOfPossession(_) => Ok(Self::ProofOfPossession(sig)),
-        }
+    /// Determine if two signature shares were signed using the same scheme
+    pub fn same_scheme(&self, other: &Self) -> bool {
+        matches!(
+            (self, other),
+            (Self::Basic(_), Self::Basic(_))
+                | (Self::MessageAugmentation(_), Self::MessageAugmentation(_))
+                | (Self::ProofOfPossession(_), Self::ProofOfPossession(_))
+        )
     }
 
     /// Extract the inner raw representation
-    pub fn as_raw_value(&self) -> &<C as Pairing>::Signature {
+    pub fn as_raw_value(&self) -> &<C as Pairing>::SignatureShare {
         match self {
             Self::Basic(s) => s,
             Self::MessageAugmentation(s) => s,

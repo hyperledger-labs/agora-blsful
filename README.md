@@ -8,14 +8,12 @@ The blissful crate provides a production ready BLS signature implementation.
 That being said please note
 
 - **This implementation has not been reviewed or audited yet. Use at your own risk**
-- This implementation does not require the Rust standard library and is `no_std` compliant.
 - All operations are constant time unless explicity noted.
 
 # [Documentation](https://docs.rs/blsful)
 BLS signatures offer the smallest known signature size as well as other benefits like one round threshold signing and signature aggregation.
 
 BLS signatures rely on pairing-friendly curves which have two fields for points. This library provides keys and signatures for both fields.
-Normal fields used for each type are named appropriately and any in the reverse are suffixed with `Vt` short for variant.
 
 For example, most signatures occur in the G1 group requiring public keys in G2 so these are simply named `Signature` and `PublicKey`.
 The variant type swaps the fields and thus is name `SignatureVt` and `PublicKeyVt`. Signature proofs of knowledge are supported using

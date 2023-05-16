@@ -1,97 +1,174 @@
-use crate::{hash_fr, secret_key_share::SECRET_KEY_SHARE_BYTES, SecretKeyShare};
-use bls12_381_plus::Scalar;
+use crate::traits::{BlsSignCrypt, BlsSignatureCore, BlsSignatureProof, BlsTimeCrypt};
+use crate::*;
+use bls12_381_plus::elliptic_curve::{Group, PrimeField};
+
+use crate::helpers::{get_crypto_rng, KEYGEN_SALT};
+use rand::Rng;
 use rand_core::{CryptoRng, RngCore};
 use subtle::CtOption;
-use vsss_rs::{
-    const_generics::Share,
-    heapless::Vec,
-    shamir::{combine_shares_const_generics, split_secret_const_generics},
-    Error,
-};
-use zeroize::Zeroize;
+use vsss_rs::{combine_shares, shamir};
+
+/// Number of bytes needed to represent the secret key
+pub const SECRET_KEY_BYTES: usize = 32;
 
 /// The secret key is field element 0 < `x` < `r`
 /// where `r` is the curve order. See Section 4.3 in
 /// <https://eprint.iacr.org/2016/663.pdf>
-#[derive(Clone, Debug, Default, Eq, PartialEq, Zeroize)]
-#[zeroize(drop)]
-pub struct SecretKey(pub Scalar);
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
+pub struct SecretKey<
+    C: BlsSignatureBasic
+        + BlsSignatureMessageAugmentation
+        + BlsSignaturePop
+        + BlsSignCrypt
+        + BlsTimeCrypt
+        + BlsSignatureProof
+        + BlsSerde,
+>(
+    /// The secret key raw value
+    #[serde(serialize_with = "traits::scalar::serialize::<C, _>")]
+    #[serde(deserialize_with = "traits::scalar::deserialize::<C, _>")]
+    pub <<C as Pairing>::PublicKey as Group>::Scalar,
+);
 
-impl From<SecretKey> for [u8; SecretKey::BYTES] {
-    fn from(sk: SecretKey) -> [u8; SecretKey::BYTES] {
+impl<
+        C: BlsSignatureBasic
+            + BlsSignatureMessageAugmentation
+            + BlsSignaturePop
+            + BlsSignCrypt
+            + BlsTimeCrypt
+            + BlsSignatureProof
+            + BlsSerde,
+    > From<SecretKey<C>> for [u8; SECRET_KEY_BYTES]
+{
+    fn from(sk: SecretKey<C>) -> [u8; SECRET_KEY_BYTES] {
         sk.to_bytes()
     }
 }
 
-impl<'a> From<&'a SecretKey> for [u8; SecretKey::BYTES] {
-    fn from(sk: &'a SecretKey) -> [u8; SecretKey::BYTES] {
+impl<
+        'a,
+        C: BlsSignatureBasic
+            + BlsSignatureMessageAugmentation
+            + BlsSignaturePop
+            + BlsSignCrypt
+            + BlsTimeCrypt
+            + BlsSignatureProof
+            + BlsSerde,
+    > From<&'a SecretKey<C>> for [u8; SECRET_KEY_BYTES]
+{
+    fn from(sk: &'a SecretKey<C>) -> [u8; SECRET_KEY_BYTES] {
         sk.to_bytes()
     }
 }
 
-serde_impl!(SecretKey, Scalar);
-
-impl SecretKey {
-    /// Number of bytes needed to represent the secret key
-    pub const BYTES: usize = 32;
+impl<
+        C: BlsSignatureBasic
+            + BlsSignatureMessageAugmentation
+            + BlsSignaturePop
+            + BlsSignCrypt
+            + BlsTimeCrypt
+            + BlsSignatureProof
+            + BlsSerde,
+    > SecretKey<C>
+{
+    /// Create a new random secret key
+    pub fn new() -> Self {
+        Self::random(get_crypto_rng())
+    }
 
     /// Compute a secret key from a hash
-    pub fn hash<B: AsRef<[u8]>>(data: B) -> Self {
-        generate_secret_key(data.as_ref())
+    pub fn from_hash<B: AsRef<[u8]>>(data: B) -> Self {
+        Self(<C as HashToScalar>::hash_to_scalar(
+            data.as_ref(),
+            KEYGEN_SALT,
+        ))
     }
 
     /// Compute a secret key from a CS-PRNG
     pub fn random(mut rng: impl RngCore + CryptoRng) -> Self {
-        let mut data = [0u8; Self::BYTES];
-        rng.fill_bytes(&mut data);
-        generate_secret_key(&data)
+        Self(<C as HashToScalar>::hash_to_scalar(
+            rng.gen::<[u8; SECRET_KEY_BYTES]>(),
+            KEYGEN_SALT,
+        ))
     }
 
     /// Get the byte representation of this key
-    pub fn to_bytes(&self) -> [u8; Self::BYTES] {
-        let mut bytes = self.0.to_bytes();
+    pub fn to_bytes(&self) -> [u8; SECRET_KEY_BYTES] {
+        let mut bytes = self.0.to_repr();
+        let ptr = bytes.as_mut();
         // Make big endian
-        bytes.reverse();
-        bytes
+        ptr.reverse();
+        <[u8; SECRET_KEY_BYTES]>::try_from(ptr).unwrap()
     }
 
     /// Convert a big-endian representation of the secret key.
-    pub fn from_bytes(bytes: &[u8; Self::BYTES]) -> CtOption<Self> {
-        let mut t = [0u8; Self::BYTES];
+    pub fn from_bytes(bytes: &[u8; SECRET_KEY_BYTES]) -> CtOption<Self> {
+        let mut repr =
+            <<<C as Pairing>::PublicKey as Group>::Scalar as PrimeField>::Repr::default();
+        let t = repr.as_mut();
         t.copy_from_slice(bytes);
         t.reverse();
-        Scalar::from_bytes(&t).map(SecretKey)
+        <<C as Pairing>::PublicKey as Group>::Scalar::from_repr(repr).map(Self)
     }
 
     /// Secret share this key by creating `N` shares where `T` are required
     /// to combine back into this secret
-    pub fn split<R: RngCore + CryptoRng>(
+    pub fn split(
         &self,
         threshold: usize,
         limit: usize,
-        rng: &mut R,
-    ) -> Result<Vec<SecretKeyShare, 255>, Error> {
-        let shares = split_secret_const_generics::<_, _, SECRET_KEY_SHARE_BYTES>(
-            threshold, limit, self.0, rng,
-        )?;
-        Ok(shares.iter().map(|s| SecretKeyShare(s.clone())).collect())
+        rng: impl RngCore + CryptoRng,
+    ) -> BlsResult<Vec<SecretKeyShare<C>>> {
+        let shares = shamir::split_secret(threshold, limit, self.0, rng)?
+            .into_iter()
+            .map(SecretKeyShare)
+            .collect::<Vec<_>>();
+        Ok(shares)
     }
 
     /// Reconstruct a secret from shares created from `split`
-    pub fn combine(shares: &[SecretKeyShare]) -> Result<SecretKey, Error> {
-        if shares.len() < 2 {
-            return Err(Error::SharingLimitLessThanThreshold);
-        }
-        let mut ss = Vec::<Share<SECRET_KEY_SHARE_BYTES>, 255>::new();
-        for s in shares {
-            ss.push(s.0.clone()).unwrap();
-        }
-        let scalar = combine_shares_const_generics::<_, SECRET_KEY_SHARE_BYTES>(&ss)?;
-        Ok(SecretKey(scalar))
+    pub fn combine(shares: &[SecretKeyShare<C>]) -> BlsResult<Self> {
+        let ss = shares.iter().map(|s| s.0.clone()).collect::<Vec<_>>();
+        let secret = combine_shares(&ss)?;
+        Ok(Self(secret))
     }
-}
 
-fn generate_secret_key(ikm: &[u8]) -> SecretKey {
-    const SALT: &[u8] = b"BLS-SIG-KEYGEN-SALT-";
-    SecretKey(hash_fr(Some(SALT), ikm))
+    /// Compute the public key
+    pub fn public_key(&self) -> PublicKey<C> {
+        PublicKey(<C as BlsSignatureCore>::public_key(&self.0))
+    }
+
+    /// Create a proof of possession
+    pub fn proof_of_possession(&self) -> BlsResult<ProofOfPossession<C>> {
+        Ok(ProofOfPossession(<C as BlsSignaturePop>::pop_prove(
+            &self.0,
+        )?))
+    }
+
+    /// Sign a message with this secret key using the specified scheme
+    pub fn sign(&self, scheme: SignatureSchemes, msg: &[u8]) -> BlsResult<Signature<C>> {
+        match scheme {
+            SignatureSchemes::Basic => {
+                let inner = <C as BlsSignatureBasic>::sign(&self.0, msg)?;
+                Ok(Signature::Basic(inner))
+            }
+            SignatureSchemes::MessageAugmentation => {
+                let inner = <C as BlsSignatureMessageAugmentation>::sign(&self.0, msg)?;
+                Ok(Signature::MessageAugmentation(inner))
+            }
+            SignatureSchemes::ProofOfPossession => {
+                let inner = <C as BlsSignaturePop>::sign(&self.0, msg)?;
+                Ok(Signature::ProofOfPossession(inner))
+            }
+        }
+    }
+
+    /// Create a Signcrypt decryption key where the secret key is hidden
+    /// that can decrypt ciphertext
+    pub fn sign_decryption_key<B: AsRef<[u8]>>(
+        &self,
+        ciphertext: &SignCryptCiphertext<C>,
+    ) -> SignCryptDecryptionKey<C> {
+        SignCryptDecryptionKey(ciphertext.u * self.0)
+    }
 }

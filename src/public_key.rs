@@ -1,48 +1,159 @@
 use crate::*;
-use bls12_381_plus::{group::Curve, G1Projective, G2Affine, G2Projective};
-use subtle::{Choice, CtOption};
+use bls12_381_plus::elliptic_curve::Group;
 
 /// A BLS public key
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct PublicKey(pub G2Projective);
+#[derive(Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PublicKey<
+    C: BlsSignatureBasic
+        + BlsSignatureMessageAugmentation
+        + BlsSignaturePop
+        + BlsSignCrypt
+        + BlsTimeCrypt
+        + BlsSignatureProof
+        + BlsSerde,
+>(
+    /// The BLS public key raw value
+    #[serde(serialize_with = "traits::public_key::serialize::<C, _>")]
+    #[serde(deserialize_with = "traits::public_key::deserialize::<C, _>")]
+    pub <C as Pairing>::PublicKey,
+);
 
-display_one_impl!(PublicKey);
-
-impl From<&SecretKey> for PublicKey {
-    fn from(s: &SecretKey) -> Self {
-        Self(G2Projective::GENERATOR * s.0)
+impl<
+        C: BlsSignatureBasic
+            + BlsSignatureMessageAugmentation
+            + BlsSignaturePop
+            + BlsSignCrypt
+            + BlsTimeCrypt
+            + BlsSignatureProof
+            + BlsSerde,
+    > From<&SecretKey<C>> for PublicKey<C>
+{
+    fn from(s: &SecretKey<C>) -> Self {
+        Self(<C as Pairing>::PublicKey::generator() * s.0)
     }
 }
 
-impl From<PublicKey> for [u8; PublicKey::BYTES] {
-    fn from(pk: PublicKey) -> Self {
-        pk.to_bytes()
+impl<
+        C: BlsSignatureBasic
+            + BlsSignatureMessageAugmentation
+            + BlsSignaturePop
+            + BlsSignCrypt
+            + BlsTimeCrypt
+            + BlsSignatureProof
+            + BlsSerde,
+    > core::fmt::Display for PublicKey<C>
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
-impl<'a> From<&'a PublicKey> for [u8; PublicKey::BYTES] {
-    fn from(pk: &'a PublicKey) -> [u8; PublicKey::BYTES] {
-        pk.to_bytes()
+impl<
+        C: BlsSignatureBasic
+            + BlsSignatureMessageAugmentation
+            + BlsSignaturePop
+            + BlsSignCrypt
+            + BlsTimeCrypt
+            + BlsSignatureProof
+            + BlsSerde,
+    > core::fmt::Debug for PublicKey<C>
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(f, "{:?}", self.0)
     }
 }
 
-serde_impl!(PublicKey, G2Projective);
+impl<
+        C: BlsSignatureBasic
+            + BlsSignatureMessageAugmentation
+            + BlsSignaturePop
+            + BlsSignCrypt
+            + BlsTimeCrypt
+            + BlsSignatureProof
+            + BlsSerde,
+    > Copy for PublicKey<C>
+{
+}
 
-cond_select_impl!(PublicKey, G2Projective);
+impl<
+        C: BlsSignatureBasic
+            + BlsSignatureMessageAugmentation
+            + BlsSignaturePop
+            + BlsSignCrypt
+            + BlsTimeCrypt
+            + BlsSignatureProof
+            + BlsSerde,
+    > Clone for PublicKey<C>
+{
+    fn clone(&self) -> Self {
+        Self(self.0)
+    }
+}
 
-impl PublicKey {
-    /// Number of bytes needed to represent the public key
-    pub const BYTES: usize = G2Projective::COMPRESSED_BYTES;
+impl<
+        C: BlsSignatureBasic
+            + BlsSignatureMessageAugmentation
+            + BlsSignaturePop
+            + BlsSignCrypt
+            + BlsTimeCrypt
+            + BlsSignatureProof
+            + BlsSerde,
+    > subtle::ConditionallySelectable for PublicKey<C>
+{
+    fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
+        Self(<C as Pairing>::PublicKey::conditional_select(
+            &a.0, &b.0, choice,
+        ))
+    }
+}
 
-    validity_checks!();
+impl<
+        C: BlsSignatureBasic
+            + BlsSignatureMessageAugmentation
+            + BlsSignaturePop
+            + BlsSignCrypt
+            + BlsTimeCrypt
+            + BlsSignatureProof
+            + BlsSerde,
+    > PublicKey<C>
+{
+    /// Encrypt a message using signcryption
+    pub fn sign_crypt<B: AsRef<[u8]>>(
+        &self,
+        scheme: SignatureSchemes,
+        msg: B,
+    ) -> SignCryptCiphertext<C> {
+        let dst = match scheme {
+            SignatureSchemes::Basic => <C as BlsSignatureBasic>::DST,
+            SignatureSchemes::MessageAugmentation => <C as BlsSignatureMessageAugmentation>::DST,
+            SignatureSchemes::ProofOfPossession => <C as BlsSignaturePop>::SIG_DST,
+        };
+        let (u, v, w) = <C as BlsSignCrypt>::seal(self.0, msg.as_ref(), dst);
+        SignCryptCiphertext { u, v, w, scheme }
+    }
 
-    bytes_impl!(G2Affine, G2Projective);
+    /// Encrypt a message using time lock encryption
+    pub fn time_lock_encrypt<B: AsRef<[u8]>, D: AsRef<[u8]>>(
+        &self,
+        scheme: SignatureSchemes,
+        msg: B,
+        id: D,
+    ) -> BlsResult<TimeCryptCiphertext<C>> {
+        let (u, v, w) = <C as BlsTimeCrypt>::seal(
+            self.0,
+            msg.as_ref(),
+            id.as_ref(),
+            <C as BlsSignatureBasic>::DST,
+        )?;
+        Ok(TimeCryptCiphertext { u, v, w, scheme })
+    }
 
-    #[cfg(any(features = "alloc", feature = "std"))]
-    /// Signcryption as described in
-    /// <https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.119.1717&rep=rep1&type=pdf>
-    pub fn sign_crypt<B: AsRef<[u8]>>(&self, msg: B) -> Ciphertext<G2Projective, G1Projective> {
-        let (u, v, w) = SignCryptorG2::seal(self.0, msg.as_ref());
-        Ciphertext { u, v, w }
+    /// Create a public key from secret shares
+    pub fn from_shares(shares: &[PublicKeyShare<C>]) -> BlsResult<Self> {
+        let points = shares
+            .iter()
+            .map(|s| s.0)
+            .collect::<Vec<<C as Pairing>::PublicKeyShare>>();
+        <C as BlsSignatureCore>::core_combine_public_key_shares(&points).map(Self)
     }
 }
