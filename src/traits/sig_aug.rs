@@ -1,9 +1,12 @@
 use crate::*;
 use bls12_381_plus::elliptic_curve::{group::GroupEncoding, Group};
 
+/// BLS signature augmentation trait
 pub trait BlsSignatureMessageAugmentation: BlsSignatureCore {
+    /// The domain separation tag
     const DST: &'static [u8];
 
+    /// The signing algorithm
     fn sign<B: AsRef<[u8]>>(
         sk: &<Self::PublicKey as Group>::Scalar,
         msg: B,
@@ -13,12 +16,14 @@ pub trait BlsSignatureMessageAugmentation: BlsSignatureCore {
         <Self as BlsSignatureCore>::core_sign(sk, overhead.as_slice(), Self::DST)
     }
 
+    /// The verification algorithm
     fn verify<B: AsRef<[u8]>>(pk: Self::PublicKey, sig: Self::Signature, msg: B) -> BlsResult<()> {
         let mut overhead = Self::pk_bytes(pk, msg.as_ref().len());
         overhead.extend_from_slice(msg.as_ref());
         <Self as BlsSignatureCore>::core_verify(pk, sig, overhead.as_slice(), Self::DST)
     }
 
+    /// The aggregate verification algorithm
     fn aggregate_verify<P, B>(pks: P, sig: Self::Signature) -> BlsResult<()>
     where
         P: Iterator<Item = (Self::PublicKey, B)>,
@@ -32,6 +37,7 @@ pub trait BlsSignatureMessageAugmentation: BlsSignatureCore {
         <Self as BlsSignatureCore>::core_aggregate_verify(new_pks, sig, Self::DST)
     }
 
+    /// The bytes of a public key
     fn pk_bytes(pk: Self::PublicKey, size_hint: usize) -> Vec<u8> {
         let pk_bytes = pk.to_bytes();
         let pk_bytes_ref = pk_bytes.as_ref();

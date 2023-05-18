@@ -5,6 +5,7 @@ use serde::Serialize;
 use subtle::ConditionallySelectable;
 use vsss_rs::Share;
 
+/// Operations that support pairing trait
 pub trait Pairing {
     /// The secret key share
     type SecretKeyShare: Share<Identifier = u8> + core::fmt::Debug;

@@ -139,15 +139,17 @@ pub trait BlsSignatureProof:
         proof: Self::Signature,
         pk: Self::PublicKey,
         t: u64,
-        timeout_ms: u64,
+        timeout_ms: Option<u64>,
         msg: B,
         dst: D,
     ) -> BlsResult<()> {
-        let now = SystemTime::now();
-        let since = UNIX_EPOCH + Duration::from_millis(t);
-        let elapsed = now.duration_since(since).unwrap().as_millis() as u64;
-        if elapsed > timeout_ms {
-            return Err(BlsError::InvalidProof);
+        if let Some(tt) = timeout_ms {
+            let now = SystemTime::now();
+            let since = UNIX_EPOCH + Duration::from_millis(t);
+            let elapsed = now.duration_since(since).unwrap().as_millis() as u64;
+            if elapsed > tt {
+                return Err(BlsError::InvalidProof);
+            }
         }
 
         let y = Self::compute_y(commitment, t);

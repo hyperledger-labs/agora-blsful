@@ -17,12 +17,10 @@
 )]
 
 mod helpers;
-mod impls;
-mod traits;
 
 use helpers::*;
-use traits::*;
 
+mod impls;
 mod aggregate_signature;
 mod error;
 mod multi_public_key;
@@ -40,6 +38,7 @@ mod sign_decryption_share;
 mod signature;
 mod signature_share;
 mod time_crypt_ciphertext;
+mod traits;
 
 pub use error::*;
 pub use impls::*;
@@ -60,6 +59,7 @@ pub use sign_decryption_share::*;
 pub use signature::*;
 pub use signature_share::*;
 pub use time_crypt_ciphertext::*;
+pub use traits::*;
 
 pub use bls12_381_plus;
 pub use vsss_rs;

@@ -10,7 +10,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 /// Represents BLS signatures on the BLS12-381 curve where
 /// Signatures are in G1 and Public Keys are in G2 or
 /// i.e. signatures are small and public keys are large
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub struct Bls12381G1;
 
 impl HashToPoint for Bls12381G1 {
@@ -136,5 +136,23 @@ impl Bls12381G1 {
             rng.gen::<[u8; SECRET_KEY_BYTES]>(),
             KEYGEN_SALT,
         ))
+    }
+
+    /// Create a new random commitment challenge for signature proofs of knowledge
+    /// as step 2
+    pub fn new_proof_challenge() -> ProofCommitmentChallenge<Self> {
+        ProofCommitmentChallenge::new()
+    }
+
+    /// Compute a commitment challenge for signature proofs of knowledge from a hash
+    /// as step 2
+    pub fn proof_challenge_from_hash<B: AsRef<[u8]>>(data: B) -> ProofCommitmentChallenge<Self> {
+        ProofCommitmentChallenge::from_hash(data)
+    }
+
+    /// Compute a commitment challenge for signature proofs of knowledge from a CS-PRNG
+    /// as step 2
+    pub fn random_proof_challenge(mut rng: impl RngCore + CryptoRng) -> ProofCommitmentChallenge<Self> {
+        ProofCommitmentChallenge::random(&mut rng)
     }
 }

@@ -2,9 +2,12 @@ use crate::*;
 use bls12_381_plus::elliptic_curve::group::Group;
 use std::collections::HashMap;
 
+/// BLS signature basic trait
 pub trait BlsSignatureBasic: BlsSignatureCore {
+    /// The domain separation tag
     const DST: &'static [u8];
 
+    /// Sign a message with a secret key share
     fn partial_sign<B: AsRef<[u8]>>(
         sks: &Self::SecretKeyShare,
         msg: B,
@@ -12,6 +15,7 @@ pub trait BlsSignatureBasic: BlsSignatureCore {
         <Self as BlsSignatureCore>::core_partial_sign(sks, msg, Self::DST)
     }
 
+    /// Verify a signed message by a secret key share
     fn partial_verify<B: AsRef<[u8]>>(
         pks: Self::PublicKeyShare,
         sig: Self::SignatureShare,
@@ -20,6 +24,7 @@ pub trait BlsSignatureBasic: BlsSignatureCore {
         <Self as BlsSignatureCore>::core_signature_share_verify(pks, sig, msg, Self::DST)
     }
 
+    /// The signing algorithm
     fn sign<B: AsRef<[u8]>>(
         sk: &<Self::PublicKey as Group>::Scalar,
         msg: B,
@@ -27,10 +32,12 @@ pub trait BlsSignatureBasic: BlsSignatureCore {
         <Self as BlsSignatureCore>::core_sign(sk, msg, Self::DST)
     }
 
+    /// The verification algorithm
     fn verify<B: AsRef<[u8]>>(pk: Self::PublicKey, sig: Self::Signature, msg: B) -> BlsResult<()> {
         <Self as BlsSignatureCore>::core_verify(pk, sig, msg, Self::DST)
     }
 
+    /// The aggregate verification algorithm
     fn aggregate_verify<P, B>(pks: P, sig: Self::Signature) -> BlsResult<()>
     where
         P: Iterator<Item = (Self::PublicKey, B)>,

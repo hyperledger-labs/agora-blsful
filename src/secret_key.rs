@@ -111,9 +111,19 @@ impl<
         <<C as Pairing>::PublicKey as Group>::Scalar::from_repr(repr).map(Self)
     }
 
-    /// Secret share this key by creating `N` shares where `T` are required
+    /// Secret share this key by creating `limit` shares where `threshold` are required
     /// to combine back into this secret
     pub fn split(
+        &self,
+        threshold: usize,
+        limit: usize,
+    ) -> BlsResult<Vec<SecretKeyShare<C>>> {
+        self.split_with_rng(threshold, limit, get_crypto_rng())
+    }
+
+    /// Secret share this key by creating `limit` shares where `threshold` are required
+    /// to combine back into this secret using a specified RNG
+    pub fn split_with_rng(
         &self,
         threshold: usize,
         limit: usize,

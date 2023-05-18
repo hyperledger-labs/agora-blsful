@@ -7,7 +7,7 @@ use subtle::Choice;
 /// to produce the completed key, or used for
 /// creating partial signatures which can be
 /// combined into a complete signature
-#[derive(Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct PublicKeyShare<
     C: BlsSignatureBasic
         + BlsSignatureMessageAugmentation

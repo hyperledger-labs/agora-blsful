@@ -164,7 +164,9 @@ impl<
             }
             let ss = match s {
                 Signature::Basic(sig) => sig,
-                Signature::MessageAugmentation(sig) => sig,
+                Signature::MessageAugmentation(_) => {
+                    return Err(BlsError::InvalidSignatureScheme);
+                }
                 Signature::ProofOfPossession(sig) => sig,
             };
             g += ss;
@@ -205,5 +207,10 @@ impl<
             Self::MessageAugmentation(s) => s,
             Self::ProofOfPossession(s) => s,
         }
+    }
+
+    /// Accumulate multiple signatures into a single signature
+    pub fn from_signatures<B: AsRef<[Signature<C>]>>(signatures: B) -> BlsResult<Self> {
+        Self::try_from(signatures.as_ref())
     }
 }

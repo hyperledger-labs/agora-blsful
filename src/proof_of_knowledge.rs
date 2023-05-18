@@ -401,7 +401,7 @@ impl<
         &self,
         pk: PublicKey<C>,
         msg: B,
-        timeout_ms: u64,
+        timeout_ms: Option<u64>,
     ) -> BlsResult<()> {
         match self.proof {
             ProofOfKnowledge::Basic { u, v } => <C as BlsSignatureProof>::verify_timestamp_proof(

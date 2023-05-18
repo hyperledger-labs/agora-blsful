@@ -121,4 +121,8 @@ impl<
             + BlsSerde,
     > MultiPublicKey<C>
 {
+    /// Accumulate multiple public keys into a single public key
+    pub fn from_public_keys<B: AsRef<[PublicKey<C>]>>(keys: B) -> Self {
+        Self::from(keys.as_ref())
+    }
 }

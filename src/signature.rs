@@ -167,9 +167,12 @@ impl<
 
     /// Determine if two signature were signed using the same scheme
     pub fn same_scheme(&self, &other: &Self) -> bool {
-        matches!((self, other), (Self::Basic(_), Self::Basic(_))
-             | (Self::MessageAugmentation(_), Self::MessageAugmentation(_))
-             | (Self::ProofOfPossession(_), Self::ProofOfPossession(_)))
+        matches!(
+            (self, other),
+            (Self::Basic(_), Self::Basic(_))
+                | (Self::MessageAugmentation(_), Self::MessageAugmentation(_))
+                | (Self::ProofOfPossession(_), Self::ProofOfPossession(_))
+        )
     }
 
     /// Create a signature from shares

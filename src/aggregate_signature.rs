@@ -1,4 +1,5 @@
 use crate::*;
+use bls12_381_plus::elliptic_curve::Group;
 
 /// Represents a BLS signature for multiple signatures that signed different messages
 #[derive(PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -151,8 +152,47 @@ impl<
             + BlsTimeCrypt
             + BlsSignatureProof
             + BlsSerde,
+    > TryFrom<&[Signature<C>]> for AggregateSignature<C>
+{
+    type Error = BlsError;
+
+    fn try_from(sigs: &[Signature<C>]) -> Result<Self, Self::Error> {
+        let mut g = <C as Pairing>::Signature::identity();
+        for s in &sigs[1..] {
+            if !s.same_scheme(&sigs[0]) {
+                return Err(BlsError::InvalidSignatureScheme);
+            }
+            let ss = match s {
+                Signature::Basic(sig) => sig,
+                Signature::MessageAugmentation(sig) => sig,
+                Signature::ProofOfPossession(sig) => sig,
+            };
+            g += ss;
+        }
+        match sigs[0] {
+            Signature::Basic(s) => Ok(Self::Basic(g + s)),
+            Signature::MessageAugmentation(s) => Ok(Self::MessageAugmentation(g + s)),
+            Signature::ProofOfPossession(s) => Ok(Self::ProofOfPossession(g + s)),
+        }
+    }
+}
+
+impl<
+        C: BlsSignatureBasic
+            + BlsSignatureMessageAugmentation
+            + BlsSignaturePop
+            + BlsSignCrypt
+            + BlsTimeCrypt
+            + BlsSignatureProof
+            + BlsSerde,
     > AggregateSignature<C>
 {
+    /// Accumulate multiple signatures into a single signature
+    /// Verify fails if any signed message is a duplicate
+    pub fn from_signatures<B: AsRef<[Signature<C>]>>(signatures: B) -> BlsResult<Self> {
+        Self::try_from(signatures.as_ref())
+    }
+
     /// Verify the aggregated signature using the public keys
     pub fn verify<B: AsRef<[u8]>>(&self, data: &[(PublicKey<C>, B)]) -> BlsResult<()> {
         let ii = data.iter().map(|(pk, m)| (pk.0, m));
