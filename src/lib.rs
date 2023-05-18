@@ -1,12 +1,9 @@
-//! This crate implements BLS signatures according to the IETF draft v4
+//! This crate implements BLS signatures according to the IETF latest draft
 //!
 //! for the Proof of Possession Cipher Suite
 //!
 //! Since BLS signatures can use either G1 or G2 fields, there are two types of
-//! public keys and signatures. Normal and Variant (suffix'd with Vt).
-//!
-//! Normal puts signatures in G1 and pubic keys in G2.
-//! Variant is the reverse.
+//! public keys and signatures.
 #![deny(unsafe_code)]
 #![warn(
     missing_docs,
