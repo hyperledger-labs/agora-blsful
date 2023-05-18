@@ -58,7 +58,7 @@ impl<
     > SignDecryptionShare<C>
 {
     /// Verify the signcrypt decryption share with the corresponding public key and ciphertext
-    pub fn verify<B: AsRef<[u8]>>(
+    pub fn verify(
         &self,
         pks: &PublicKeyShare<C>,
         sig: &SignCryptCiphertext<C>,

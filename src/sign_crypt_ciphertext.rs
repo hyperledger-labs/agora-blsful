@@ -55,6 +55,23 @@ impl<
             + BlsSerde,
     > SignCryptCiphertext<C>
 {
+    /// Create a decryption share from a secret key share
+    pub fn create_decryption_share(&self, sks: &SecretKeyShare<C>) -> BlsResult<SignDecryptionShare<C>> {
+        Ok(SignDecryptionShare(<C as BlsSignatureCore>::public_key_share_with_generator(&sks.0, self.u)?))
+    }
+
+    /// Open the ciphertext given the decryption shares.
+    pub fn decrypt_with_shares<B: AsRef<[SignDecryptionShare<C>]>>(&self, shares: B) -> CtOption<Vec<u8>> {
+        let dst = match self.scheme {
+            SignatureSchemes::Basic => <C as BlsSignatureBasic>::DST,
+            SignatureSchemes::MessageAugmentation => <C as BlsSignatureMessageAugmentation>::DST,
+            SignatureSchemes::ProofOfPossession => <C as BlsSignaturePop>::SIG_DST,
+        };
+
+        let shares = shares.as_ref().iter().map(|s| s.0).collect::<Vec<_>>();
+        <C as BlsSignCrypt>::unseal_with_shares(self.u, &self.v, self.w, shares.as_slice(), dst)
+    }
+
     /// Decrypt the signcrypt ciphertext
     pub fn decrypt(&self, sk: &SecretKey<C>) -> CtOption<Vec<u8>> {
         let dst = match self.scheme {

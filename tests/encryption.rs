@@ -40,8 +40,31 @@ fn sign_crypt_works<C: BlsSignatureBasic
     }
 }
 
-#[test]
-fn sign_crypt_with_shares_works() {}
+#[rstest]
+#[case::g1(Bls12381G1)]
+#[case::g2(Bls12381G2)]
+fn sign_crypt_with_shares_works<C: BlsSignatureBasic
++ BlsSignatureMessageAugmentation
++ BlsSignaturePop
++ BlsSignCrypt
++ BlsTimeCrypt
++ BlsSignatureProof
++ BlsSerde>(#[case] _c: C) {
+    let sk = SecretKey::<C>::new();
+    let pk = sk.public_key();
+    let shares = sk.split(2, 3).unwrap();
+    let ciphertext = pk.sign_crypt(SignatureSchemes::Basic, TEST_MSG);
+    let public_key_shares = shares.iter().map(|s| s.public_key().unwrap()).collect::<Vec<_>>();
+    let decryption_shares = shares.iter().map(|s| ciphertext.create_decryption_share(s).unwrap()).collect::<Vec<_>>();
+    assert!(decryption_shares.iter().zip(public_key_shares.iter()).all(|(d, p)| d.verify(p, &ciphertext).is_ok()));
+
+    let res = ciphertext.decrypt_with_shares(&decryption_shares);
+    assert_eq!(res.is_some().unwrap_u8(), 1u8);
+    let plaintext = res.unwrap();
+    assert_eq!(plaintext.as_slice(), TEST_MSG);
+    let res = ciphertext.decrypt_with_shares(&decryption_shares[2..]);
+    assert_eq!(res.is_some().unwrap_u8(), 0u8);
+}
 
 #[rstest]
 #[case::g1(Bls12381G1)]

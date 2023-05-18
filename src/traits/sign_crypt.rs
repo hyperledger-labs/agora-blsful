@@ -73,11 +73,11 @@ pub trait BlsSignCrypt:
     }
 
     /// Open the ciphertext given the decryption shares.
-    fn unseal_with_key(
+    fn unseal_with_shares(
         u: Self::PublicKey,
         v: &[u8],
         w: Self::Signature,
-        shares: &[Self::SignatureShare],
+        shares: &[Self::PublicKeyShare],
         dst: &[u8],
     ) -> CtOption<Vec<u8>> {
         if shares.len() < 2 {

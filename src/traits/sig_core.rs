@@ -11,8 +11,13 @@ pub trait BlsSignatureCore: Pairing + HashToPoint<Output = Self::Signature> {
 
     /// Get the public key share corresponding to the secret key share
     fn public_key_share(sks: &Self::SecretKeyShare) -> BlsResult<Self::PublicKeyShare> {
-        let sk = sks.as_field_element()?;
-        let pk = Self::public_key(&sk);
+        Self::public_key_share_with_generator(sks, <Self::PublicKey as Group>::generator())
+    }
+
+    /// Get the public key share corresponding to the secret key share and a generator
+    fn public_key_share_with_generator(sks: &Self::SecretKeyShare, generator: Self::PublicKey) -> BlsResult<Self::PublicKeyShare> {
+        let sk = sks.as_field_element::<<Self::PublicKey as Group>::Scalar>()?;
+        let pk: Self::PublicKey = generator * sk;
         let pk_bytes = pk.to_bytes();
         let mut pk_share = Self::PublicKeyShare::empty_share_with_capacity(pk_bytes.as_ref().len());
         *pk_share.identifier_mut() = sks.identifier();
