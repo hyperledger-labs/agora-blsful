@@ -9,33 +9,21 @@ use serde::{Deserialize, Serialize};
 /// creating partial signatures which can be
 /// combined into a complete signature
 #[derive(Debug, Eq, PartialEq, Serialize, Deserialize)]
-pub struct SecretKeyShare<
-    C: BlsSignatureBasic
-        + BlsSignatureMessageAugmentation
-        + BlsSignaturePop
->(
+pub struct SecretKeyShare<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>(
     #[serde(serialize_with = "traits::secret_key_share::serialize::<C, _>")]
     #[serde(deserialize_with = "traits::secret_key_share::deserialize::<C, _>")]
     pub <C as Pairing>::SecretKeyShare,
 );
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > Clone for SecretKeyShare<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Clone
+    for SecretKeyShare<C>
 {
     fn clone(&self) -> Self {
         Self(self.0.clone())
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > SecretKeyShare<C>
-{
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> SecretKeyShare<C> {
     /// Compute the public key
     pub fn public_key(&self) -> BlsResult<PublicKeyShare<C>> {
         Ok(PublicKeyShare(<C as BlsSignatureCore>::public_key_share(

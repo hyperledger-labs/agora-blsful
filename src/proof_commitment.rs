@@ -6,11 +6,7 @@ use subtle::CtOption;
 
 /// The commitment portion of the signature proof of knowledge
 #[derive(PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub enum ProofCommitment<
-    C: BlsSignatureBasic
-        + BlsSignatureMessageAugmentation
-        + BlsSignaturePop
-> {
+pub enum ProofCommitment<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> {
     /// The basic signature scheme
     Basic(
         /// The commitment
@@ -34,22 +30,16 @@ pub enum ProofCommitment<
     ),
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > Default for ProofCommitment<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Default
+    for ProofCommitment<C>
 {
     fn default() -> Self {
         Self::ProofOfPossession(<C as Pairing>::Signature::default())
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > core::fmt::Display for ProofCommitment<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Display
+    for ProofCommitment<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
@@ -60,11 +50,8 @@ impl<
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > core::fmt::Debug for ProofCommitment<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Debug
+    for ProofCommitment<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
@@ -75,19 +62,13 @@ impl<
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > Copy for ProofCommitment<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Copy
+    for ProofCommitment<C>
 {
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > Clone for ProofCommitment<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Clone
+    for ProofCommitment<C>
 {
     fn clone(&self) -> Self {
         match self {
@@ -98,11 +79,8 @@ impl<
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > subtle::ConditionallySelectable for ProofCommitment<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
+    subtle::ConditionallySelectable for ProofCommitment<C>
 {
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
         match (a, b) {
@@ -122,12 +100,7 @@ impl<
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > ProofCommitment<C>
-{
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> ProofCommitment<C> {
     /// Generate a new proof of knowledge commitment
     /// This is step 1 in the 3 step process
     pub fn generate<B: AsRef<[u8]>>(
@@ -188,9 +161,7 @@ impl<
 /// A commitment secret used to create the proof of knowledge
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 pub struct ProofCommitmentSecret<
-    C: BlsSignatureBasic
-        + BlsSignatureMessageAugmentation
-        + BlsSignaturePop
+    C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop,
 >(
     /// The commitment secret raw value
     #[serde(serialize_with = "traits::scalar::serialize::<C, _>")]
@@ -198,11 +169,8 @@ pub struct ProofCommitmentSecret<
     pub <<C as Pairing>::PublicKey as Group>::Scalar,
 );
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > ProofCommitmentSecret<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
+    ProofCommitmentSecret<C>
 {
     /// Get the byte representation of this key
     pub fn to_bytes(&self) -> [u8; SECRET_KEY_BYTES] {
@@ -228,9 +196,7 @@ impl<
 /// step 2 of the proof generation process
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 pub struct ProofCommitmentChallenge<
-    C: BlsSignatureBasic
-        + BlsSignatureMessageAugmentation
-        + BlsSignaturePop
+    C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop,
 >(
     /// The commitment challenge raw value
     #[serde(serialize_with = "traits::scalar::serialize::<C, _>")]
@@ -238,11 +204,8 @@ pub struct ProofCommitmentChallenge<
     pub <<C as Pairing>::PublicKey as Group>::Scalar,
 );
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > ProofCommitmentChallenge<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
+    ProofCommitmentChallenge<C>
 {
     /// Create a new random secret key
     pub fn new() -> Self {

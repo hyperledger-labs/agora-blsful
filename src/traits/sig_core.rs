@@ -3,7 +3,15 @@ use bls12_381_plus::elliptic_curve::{group::GroupEncoding, Field, Group};
 use vsss_rs::{combine_shares_group, Share};
 
 /// The core methods used by BLS signatures
-pub trait BlsSignatureCore: Pairing + HashToPoint<Output = Self::Signature> + BlsSerde + BlsSignatureProof + BlsSignCrypt + BlsTimeCrypt + BlsElGamal {
+pub trait BlsSignatureCore:
+    Pairing
+    + HashToPoint<Output = Self::Signature>
+    + BlsSerde
+    + BlsSignatureProof
+    + BlsSignCrypt
+    + BlsTimeCrypt
+    + BlsElGamal
+{
     /// Get the public key corresponding to the secret key
     fn public_key(sk: &<Self::PublicKey as Group>::Scalar) -> Self::PublicKey {
         <Self::PublicKey as Group>::generator() * sk
@@ -15,7 +23,10 @@ pub trait BlsSignatureCore: Pairing + HashToPoint<Output = Self::Signature> + Bl
     }
 
     /// Get the public key share corresponding to the secret key share and a generator
-    fn public_key_share_with_generator(sks: &Self::SecretKeyShare, generator: Self::PublicKey) -> BlsResult<Self::PublicKeyShare> {
+    fn public_key_share_with_generator(
+        sks: &Self::SecretKeyShare,
+        generator: Self::PublicKey,
+    ) -> BlsResult<Self::PublicKeyShare> {
         let sk = sks.as_field_element::<<Self::PublicKey as Group>::Scalar>()?;
         let pk: Self::PublicKey = generator * sk;
         let pk_bytes = pk.to_bytes();

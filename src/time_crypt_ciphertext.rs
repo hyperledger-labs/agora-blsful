@@ -4,9 +4,7 @@ use subtle::CtOption;
 /// The ciphertext output from time lock encryption
 #[derive(Clone, Debug, Default, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct TimeCryptCiphertext<
-    C: BlsSignatureBasic
-        + BlsSignatureMessageAugmentation
-        + BlsSignaturePop
+    C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop,
 > {
     /// The `u` component
     #[serde(serialize_with = "traits::public_key::serialize::<C, _>")]
@@ -20,11 +18,8 @@ pub struct TimeCryptCiphertext<
     pub scheme: SignatureSchemes,
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > TimeCryptCiphertext<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
+    TimeCryptCiphertext<C>
 {
     /// Decrypt the time lock ciphertext using a signature over an identifier
     pub fn decrypt(&self, sig: &Signature<C>) -> CtOption<Vec<u8>> {

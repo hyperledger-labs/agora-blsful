@@ -2,75 +2,53 @@ use crate::*;
 use bls12_381_plus::elliptic_curve::Group;
 
 /// A BLS public key
-#[derive(Default, PartialEq, Eq, Serialize, Deserialize)]
-pub struct PublicKey<
-    C: BlsSignatureBasic
-        + BlsSignatureMessageAugmentation
-        + BlsSignaturePop
->(
+#[derive(Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct PublicKey<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>(
     /// The BLS public key raw value
     #[serde(serialize_with = "traits::public_key::serialize::<C, _>")]
     #[serde(deserialize_with = "traits::public_key::deserialize::<C, _>")]
     pub <C as Pairing>::PublicKey,
 );
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > From<&SecretKey<C>> for PublicKey<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> From<&SecretKey<C>>
+    for PublicKey<C>
 {
     fn from(s: &SecretKey<C>) -> Self {
         Self(<C as Pairing>::PublicKey::generator() * s.0)
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > core::fmt::Display for PublicKey<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Display
+    for PublicKey<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         write!(f, "{}", self.0)
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > core::fmt::Debug for PublicKey<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Debug
+    for PublicKey<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         write!(f, "{:?}", self.0)
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > Copy for PublicKey<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Copy
+    for PublicKey<C>
 {
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > Clone for PublicKey<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Clone
+    for PublicKey<C>
 {
     fn clone(&self) -> Self {
         Self(self.0)
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > subtle::ConditionallySelectable for PublicKey<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
+    subtle::ConditionallySelectable for PublicKey<C>
 {
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
         Self(<C as Pairing>::PublicKey::conditional_select(
@@ -79,12 +57,7 @@ impl<
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > PublicKey<C>
-{
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> PublicKey<C> {
     /// Encrypt a message using signcryption
     pub fn sign_crypt<B: AsRef<[u8]>>(
         &self,
@@ -101,7 +74,7 @@ impl<
     }
 
     /// Encrypt a message using time lock encryption
-    pub fn time_lock_encrypt<B: AsRef<[u8]>, D: AsRef<[u8]>>(
+    pub fn encrypt_time_lock<B: AsRef<[u8]>, D: AsRef<[u8]>>(
         &self,
         scheme: SignatureSchemes,
         msg: B,
@@ -114,6 +87,24 @@ impl<
             <C as BlsSignatureBasic>::DST,
         )?;
         Ok(TimeCryptCiphertext { u, v, w, scheme })
+    }
+
+    /// Encrypt a message using ElGamal
+    pub fn encrypt_key_el_gamal(&self, sk: &SecretKey<C>) -> BlsResult<ElGamalCiphertext<C>> {
+        let (c1, c2) = <C as BlsElGamal>::seal_scalar(self.0, sk.0, None, None, get_crypto_rng())?;
+        Ok(ElGamalCiphertext { c1, c2 })
+    }
+
+    /// Encrypt a message using ElGamal and generate a proof
+    pub fn encrypt_key_el_gamal_with_proof(&self, sk: &SecretKey<C>) -> BlsResult<ElGamalProof<C>> {
+        let (c1, c2, message_proof, blinder_proof, challenge) =
+            <C as BlsElGamal>::seal_scalar_with_proof(self.0, sk.0, None, None, get_crypto_rng())?;
+        Ok(ElGamalProof {
+            ciphertext: ElGamalCiphertext { c1, c2 },
+            message_proof,
+            blinder_proof,
+            challenge,
+        })
     }
 
     /// Create a public key from secret shares

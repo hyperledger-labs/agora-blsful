@@ -4,9 +4,7 @@ use subtle::CtOption;
 /// The ciphertext output from sign crypt encryption
 #[derive(Clone, Debug, Default, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct SignCryptCiphertext<
-    C: BlsSignatureBasic
-        + BlsSignatureMessageAugmentation
-        + BlsSignaturePop
+    C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop,
 > {
     /// The `u` component
     #[serde(serialize_with = "traits::public_key::serialize::<C, _>")]
@@ -22,11 +20,8 @@ pub struct SignCryptCiphertext<
     pub scheme: SignatureSchemes,
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > core::fmt::Display for SignCryptCiphertext<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Display
+    for SignCryptCiphertext<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(
@@ -37,19 +32,24 @@ impl<
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > SignCryptCiphertext<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
+    SignCryptCiphertext<C>
 {
     /// Create a decryption share from a secret key share
-    pub fn create_decryption_share(&self, sks: &SecretKeyShare<C>) -> BlsResult<SignDecryptionShare<C>> {
-        Ok(SignDecryptionShare(<C as BlsSignatureCore>::public_key_share_with_generator(&sks.0, self.u)?))
+    pub fn create_decryption_share(
+        &self,
+        sks: &SecretKeyShare<C>,
+    ) -> BlsResult<SignDecryptionShare<C>> {
+        Ok(SignDecryptionShare(
+            <C as BlsSignatureCore>::public_key_share_with_generator(&sks.0, self.u)?,
+        ))
     }
 
     /// Open the ciphertext given the decryption shares.
-    pub fn decrypt_with_shares<B: AsRef<[SignDecryptionShare<C>]>>(&self, shares: B) -> CtOption<Vec<u8>> {
+    pub fn decrypt_with_shares<B: AsRef<[SignDecryptionShare<C>]>>(
+        &self,
+        shares: B,
+    ) -> CtOption<Vec<u8>> {
         let dst = match self.scheme {
             SignatureSchemes::Basic => <C as BlsSignatureBasic>::DST,
             SignatureSchemes::MessageAugmentation => <C as BlsSignatureMessageAugmentation>::DST,
@@ -92,69 +92,33 @@ impl<
 
 /// A Signcrypt decryption key where the secret key is hidden or combined from shares
 /// that can decrypt ciphertext
-#[derive(Default, PartialEq, Eq)]
+#[derive(Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SignCryptDecryptionKey<
-    C: BlsSignatureBasic
-        + BlsSignatureMessageAugmentation
-        + BlsSignaturePop
->(pub <C as Pairing>::PublicKey);
+    C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop,
+>(
+    #[serde(serialize_with = "traits::public_key::serialize::<C, _>")]
+    #[serde(deserialize_with = "traits::public_key::deserialize::<C, _>")]
+    pub <C as Pairing>::PublicKey,
+);
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > Serialize for SignCryptDecryptionKey<C>
-{
-    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        <C as BlsSerde>::serialize_public_key(&self.0, s)
-    }
-}
-
-impl<
-        'de,
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > Deserialize<'de> for SignCryptDecryptionKey<C>
-{
-    fn deserialize<D>(d: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        <C as BlsSerde>::deserialize_public_key(d).map(Self)
-    }
-}
-
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > core::fmt::Debug for SignCryptDecryptionKey<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Debug
+    for SignCryptDecryptionKey<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         write!(f, "{:?}", self.0)
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > Clone for SignCryptDecryptionKey<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Clone
+    for SignCryptDecryptionKey<C>
 {
     fn clone(&self) -> Self {
         Self(self.0)
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > SignCryptDecryptionKey<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
+    SignCryptDecryptionKey<C>
 {
     /// Decrypt signcrypt ciphertext
     pub fn decrypt(&self, ciphertext: &SignCryptCiphertext<C>) -> CtOption<Vec<u8>> {

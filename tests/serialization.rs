@@ -1,28 +1,30 @@
 mod utils;
 use blsful::*;
-use utils::*;
 use rstest::*;
+use utils::*;
 
 #[rstest]
 #[case::g1(Bls12381G1)]
 #[case::g2(Bls12381G2)]
-fn basic_types_serialize_json<C: BlsSignatureBasic
-+ BlsSignatureMessageAugmentation
-+ BlsSignaturePop
-+ BlsSignCrypt
-+ BlsTimeCrypt
-+ BlsSignatureProof
-+ BlsSerde
-+ PartialEq
-+ Eq
-+ std::fmt::Debug>(#[case] _c: C) {
+fn basic_types_serialize_json<
+    C: BlsSignatureBasic
+        + BlsSignatureMessageAugmentation
+        + BlsSignaturePop
+        + PartialEq
+        + Eq
+        + std::fmt::Debug,
+>(
+    #[case] _c: C,
+) {
     let sk = SecretKey::<C>::random(MockRng::default());
     let pk = sk.public_key();
     let sig_b = sk.sign(SignatureSchemes::Basic, TEST_MSG).unwrap();
     let sig_ma = sk
         .sign(SignatureSchemes::MessageAugmentation, TEST_MSG)
         .unwrap();
-    let sig_pop = sk.sign(SignatureSchemes::ProofOfPossession, TEST_MSG).unwrap();
+    let sig_pop = sk
+        .sign(SignatureSchemes::ProofOfPossession, TEST_MSG)
+        .unwrap();
 
     let res = serde_json::to_vec(&sk);
     assert!(res.is_ok());
@@ -68,23 +70,25 @@ fn basic_types_serialize_json<C: BlsSignatureBasic
 #[rstest]
 #[case::g1(Bls12381G1)]
 #[case::g2(Bls12381G2)]
-fn basic_types_serialize_binary<C: BlsSignatureBasic
-+ BlsSignatureMessageAugmentation
-+ BlsSignaturePop
-+ BlsSignCrypt
-+ BlsTimeCrypt
-+ BlsSignatureProof
-+ BlsSerde
-+ PartialEq
-+ Eq
-+ std::fmt::Debug>(#[case] _c: C) {
+fn basic_types_serialize_binary<
+    C: BlsSignatureBasic
+        + BlsSignatureMessageAugmentation
+        + BlsSignaturePop
+        + PartialEq
+        + Eq
+        + std::fmt::Debug,
+>(
+    #[case] _c: C,
+) {
     let sk = SecretKey::<C>::random(MockRng::default());
     let pk = sk.public_key();
     let sig_b = sk.sign(SignatureSchemes::Basic, TEST_MSG).unwrap();
     let sig_ma = sk
         .sign(SignatureSchemes::MessageAugmentation, TEST_MSG)
         .unwrap();
-    let sig_pop = sk.sign(SignatureSchemes::ProofOfPossession, TEST_MSG).unwrap();
+    let sig_pop = sk
+        .sign(SignatureSchemes::ProofOfPossession, TEST_MSG)
+        .unwrap();
 
     let res = serde_bare::to_vec(&sk);
     assert!(res.is_ok());
@@ -130,18 +134,18 @@ fn basic_types_serialize_binary<C: BlsSignatureBasic
 #[rstest]
 #[case::g1(Bls12381G1)]
 #[case::g2(Bls12381G2)]
-fn shares_serialize_json<C: BlsSignatureBasic
-+ BlsSignatureMessageAugmentation
-+ BlsSignaturePop
-+ BlsSignCrypt
-+ BlsTimeCrypt
-+ BlsSignatureProof
-+ BlsSerde
-+ PartialEq
-+ Eq
-+ std::fmt::Debug
-+ serde::Serialize
-+ serde::de::DeserializeOwned>(#[case] _c: C) {
+fn shares_serialize_json<
+    C: BlsSignatureBasic
+        + BlsSignatureMessageAugmentation
+        + BlsSignaturePop
+        + PartialEq
+        + Eq
+        + std::fmt::Debug
+        + serde::Serialize
+        + serde::de::DeserializeOwned,
+>(
+    #[case] _c: C,
+) {
     let sk = SecretKey::<C>::from_hash(b"shares_serialize_json");
     // High number to test for fuzzing
     let sk_shares = sk.split(10, 20).unwrap();
@@ -163,7 +167,9 @@ fn shares_serialize_json<C: BlsSignatureBasic
         let pks2 = res.unwrap();
         assert_eq!(pks, pks2);
 
-        let sgs = share.sign(SignatureSchemes::ProofOfPossession, TEST_MSG).unwrap();
+        let sgs = share
+            .sign(SignatureSchemes::ProofOfPossession, TEST_MSG)
+            .unwrap();
         let res = serde_json::to_vec(&sgs);
         assert!(res.is_ok());
         let text = res.unwrap();

@@ -14,46 +14,30 @@ pub const SECRET_KEY_BYTES: usize = 32;
 /// where `r` is the curve order. See Section 4.3 in
 /// <https://eprint.iacr.org/2016/663.pdf>
 #[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
-pub struct SecretKey<
-    C: BlsSignatureBasic
-        + BlsSignatureMessageAugmentation
-        + BlsSignaturePop
->(
+pub struct SecretKey<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>(
     /// The secret key raw value
     #[serde(serialize_with = "traits::scalar::serialize::<C, _>")]
     #[serde(deserialize_with = "traits::scalar::deserialize::<C, _>")]
     pub <<C as Pairing>::PublicKey as Group>::Scalar,
 );
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > From<SecretKey<C>> for [u8; SECRET_KEY_BYTES]
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> From<SecretKey<C>>
+    for [u8; SECRET_KEY_BYTES]
 {
     fn from(sk: SecretKey<C>) -> [u8; SECRET_KEY_BYTES] {
         sk.to_bytes()
     }
 }
 
-impl<
-        'a,
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > From<&'a SecretKey<C>> for [u8; SECRET_KEY_BYTES]
+impl<'a, C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
+    From<&'a SecretKey<C>> for [u8; SECRET_KEY_BYTES]
 {
     fn from(sk: &'a SecretKey<C>) -> [u8; SECRET_KEY_BYTES] {
         sk.to_bytes()
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > SecretKey<C>
-{
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> SecretKey<C> {
     /// Create a new random secret key
     pub fn new() -> Self {
         Self::random(get_crypto_rng())
@@ -96,11 +80,7 @@ impl<
 
     /// Secret share this key by creating `limit` shares where `threshold` are required
     /// to combine back into this secret
-    pub fn split(
-        &self,
-        threshold: usize,
-        limit: usize,
-    ) -> BlsResult<Vec<SecretKeyShare<C>>> {
+    pub fn split(&self, threshold: usize, limit: usize) -> BlsResult<Vec<SecretKeyShare<C>>> {
         self.split_with_rng(threshold, limit, get_crypto_rng())
     }
 

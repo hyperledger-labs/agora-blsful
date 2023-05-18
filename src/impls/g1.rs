@@ -115,6 +115,9 @@ impl BlsSignCrypt for Bls12381G1 {}
 impl BlsTimeCrypt for Bls12381G1 {}
 
 impl BlsElGamal for Bls12381G1 {
+    const ENC_DST: &'static [u8] = b"BLS_ELGAMAL_BLS12381G2_XMD:SHA-256_SSWU_RO_NUL_";
+    type PublicKeyHasher = Bls12381G1Hasher;
+
     fn scalar_from_bytes_wide(bytes: &[u8; 64]) -> <Self::PublicKey as Group>::Scalar {
         Scalar::from_bytes_wide(bytes)
     }
@@ -160,7 +163,21 @@ impl Bls12381G1 {
 
     /// Compute a commitment challenge for signature proofs of knowledge from a CS-PRNG
     /// as step 2
-    pub fn random_proof_challenge(mut rng: impl RngCore + CryptoRng) -> ProofCommitmentChallenge<Self> {
+    pub fn random_proof_challenge(
+        mut rng: impl RngCore + CryptoRng,
+    ) -> ProofCommitmentChallenge<Self> {
         ProofCommitmentChallenge::random(&mut rng)
+    }
+}
+
+/// The BLS12381 G1 hash to public key group
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+pub struct Bls12381G1Hasher;
+
+impl HashToPoint for Bls12381G1Hasher {
+    type Output = G2Projective;
+
+    fn hash_to_point<B: AsRef<[u8]>, C: AsRef<[u8]>>(m: B, dst: C) -> Self::Output {
+        Self::Output::hash::<ExpandMsgXmd<sha2::Sha256>>(m.as_ref(), dst.as_ref())
     }
 }

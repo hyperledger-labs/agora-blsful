@@ -1,21 +1,21 @@
 mod utils;
 use blsful::*;
-use utils::*;
 use rstest::*;
+use utils::*;
 
 #[rstest]
 #[case::g1(Bls12381G1)]
 #[case::g2(Bls12381G2)]
-fn sign_crypt_works<C: BlsSignatureBasic
-+ BlsSignatureMessageAugmentation
-+ BlsSignaturePop
-+ BlsSignCrypt
-+ BlsTimeCrypt
-+ BlsSignatureProof
-+ BlsSerde
-+ PartialEq
-+ Eq
-+ std::fmt::Debug>(#[case] _c: C) {
+fn sign_crypt_works<
+    C: BlsSignatureBasic
+        + BlsSignatureMessageAugmentation
+        + BlsSignaturePop
+        + PartialEq
+        + Eq
+        + std::fmt::Debug,
+>(
+    #[case] _c: C,
+) {
     // Repeat test a few times to ensure randomness and fuzz testing
     for _ in 0..25 {
         let sk = SecretKey::<C>::new();
@@ -43,20 +43,27 @@ fn sign_crypt_works<C: BlsSignatureBasic
 #[rstest]
 #[case::g1(Bls12381G1)]
 #[case::g2(Bls12381G2)]
-fn sign_crypt_with_shares_works<C: BlsSignatureBasic
-+ BlsSignatureMessageAugmentation
-+ BlsSignaturePop
-+ BlsSignCrypt
-+ BlsTimeCrypt
-+ BlsSignatureProof
-+ BlsSerde>(#[case] _c: C) {
+fn sign_crypt_with_shares_works<
+    C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop,
+>(
+    #[case] _c: C,
+) {
     let sk = SecretKey::<C>::new();
     let pk = sk.public_key();
     let shares = sk.split(2, 3).unwrap();
     let ciphertext = pk.sign_crypt(SignatureSchemes::Basic, TEST_MSG);
-    let public_key_shares = shares.iter().map(|s| s.public_key().unwrap()).collect::<Vec<_>>();
-    let decryption_shares = shares.iter().map(|s| ciphertext.create_decryption_share(s).unwrap()).collect::<Vec<_>>();
-    assert!(decryption_shares.iter().zip(public_key_shares.iter()).all(|(d, p)| d.verify(p, &ciphertext).is_ok()));
+    let public_key_shares = shares
+        .iter()
+        .map(|s| s.public_key().unwrap())
+        .collect::<Vec<_>>();
+    let decryption_shares = shares
+        .iter()
+        .map(|s| ciphertext.create_decryption_share(s).unwrap())
+        .collect::<Vec<_>>();
+    assert!(decryption_shares
+        .iter()
+        .zip(public_key_shares.iter())
+        .all(|(d, p)| d.verify(p, &ciphertext).is_ok()));
 
     let res = ciphertext.decrypt_with_shares(&decryption_shares);
     assert_eq!(res.is_some().unwrap_u8(), 1u8);
@@ -69,17 +76,13 @@ fn sign_crypt_with_shares_works<C: BlsSignatureBasic
 #[rstest]
 #[case::g1(Bls12381G1)]
 #[case::g2(Bls12381G2)]
-fn time_lock_works<C: BlsSignatureBasic
-+ BlsSignatureMessageAugmentation
-+ BlsSignaturePop
-+ BlsSignCrypt
-+ BlsTimeCrypt
-+ BlsSignatureProof
-+ BlsSerde>(#[case] _c: C) {
+fn time_lock_works<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>(
+    #[case] _c: C,
+) {
     let sk = SecretKey::<C>::new();
     let pk = sk.public_key();
     let ciphertext = pk
-        .time_lock_encrypt(SignatureSchemes::Basic, TEST_MSG, TEST_ID)
+        .encrypt_time_lock(SignatureSchemes::Basic, TEST_MSG, TEST_ID)
         .unwrap();
     let sig = sk.sign(SignatureSchemes::Basic, TEST_ID).unwrap();
     let bad_sig = sk.sign(SignatureSchemes::Basic, BAD_MSG).unwrap();
@@ -96,4 +99,63 @@ fn time_lock_works<C: BlsSignatureBasic
     assert_eq!(plaintext.is_some().unwrap_u8(), 0u8);
     let plaintext = ciphertext.decrypt(&bad_scheme);
     assert_eq!(plaintext.is_some().unwrap_u8(), 0u8);
+}
+
+#[rstest]
+#[case::g1(Bls12381G1)]
+#[case::g2(Bls12381G2)]
+fn elgamal_ciphertext_works<
+    C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop,
+>(
+    #[case] _c: C,
+) {
+    let sk = SecretKey::<C>::new();
+    let one = SecretKey::<C>::new();
+    let two = SecretKey::<C>::new();
+    let three = SecretKey::<C>::new();
+    let pk = sk.public_key();
+
+    let res = pk.encrypt_key_el_gamal(&one);
+    assert!(res.is_ok());
+    let ciphertext_one = res.unwrap();
+
+    let res = ciphertext_one.decrypt(&sk);
+    assert_eq!(res, <C as BlsElGamal>::message_generator() * one.0);
+
+    let res = pk.encrypt_key_el_gamal(&two);
+    assert!(res.is_ok());
+    let ciphertext_two = res.unwrap();
+    let res = pk.encrypt_key_el_gamal(&three);
+    assert!(res.is_ok());
+    let ciphertext_three = res.unwrap();
+
+    let ciphertext = ciphertext_one + ciphertext_two + ciphertext_three;
+    let sum = ciphertext.decrypt(&sk);
+
+    assert_eq!(
+        <C as BlsElGamal>::message_generator() * (one.0 + two.0 + three.0),
+        sum
+    );
+}
+
+#[rstest]
+#[case::g1(Bls12381G1)]
+#[case::g2(Bls12381G2)]
+fn elgamal_proofs_work<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>(
+    #[case] _c: C,
+) {
+    let sk = SecretKey::<C>::new();
+    let pk = sk.public_key();
+
+    let secret = SecretKey::<C>::new();
+    let res = pk.encrypt_key_el_gamal_with_proof(&secret);
+    assert!(res.is_ok());
+    let proof = res.unwrap();
+    assert!(proof.verify(pk).is_ok());
+    let res = proof.verify_and_decrypt(&sk);
+    assert!(res.is_ok());
+    assert_eq!(
+        res.unwrap(),
+        <C as BlsElGamal>::message_generator() * secret.0
+    );
 }

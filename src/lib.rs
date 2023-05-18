@@ -20,9 +20,12 @@ mod helpers;
 
 use helpers::*;
 
-mod impls;
 mod aggregate_signature;
+mod elgamal_ciphertext;
+mod elgamal_decryption_share;
+mod elgamal_proof;
 mod error;
+mod impls;
 mod multi_public_key;
 mod multi_signature;
 mod proof_commitment;
@@ -39,15 +42,14 @@ mod signature;
 mod signature_share;
 mod time_crypt_ciphertext;
 mod traits;
-mod elgamal_ciphertext;
-mod elgamal_proof;
 
 pub use error::*;
 pub use impls::*;
 
-pub use elgamal_ciphertext::*;
-pub use elgamal_proof::*;
 pub use aggregate_signature::*;
+pub use elgamal_ciphertext::*;
+pub use elgamal_decryption_share::*;
+pub use elgamal_proof::*;
 pub use multi_public_key::*;
 pub use multi_signature::*;
 pub use proof_commitment::*;

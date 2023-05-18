@@ -2,11 +2,7 @@ use crate::*;
 
 /// Represents a share of a signature
 #[derive(PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub enum SignatureShare<
-    C: BlsSignatureBasic
-        + BlsSignatureMessageAugmentation
-        + BlsSignaturePop
-> {
+pub enum SignatureShare<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> {
     /// The basic signature scheme
     Basic(<C as Pairing>::SignatureShare),
     /// The message augmentation signature scheme
@@ -15,22 +11,16 @@ pub enum SignatureShare<
     ProofOfPossession(<C as Pairing>::SignatureShare),
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > Default for SignatureShare<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Default
+    for SignatureShare<C>
 {
     fn default() -> Self {
         Self::ProofOfPossession(<C as Pairing>::SignatureShare::empty_share_with_capacity(0))
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > core::fmt::Display for SignatureShare<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Display
+    for SignatureShare<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
@@ -41,11 +31,8 @@ impl<
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > core::fmt::Debug for SignatureShare<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Debug
+    for SignatureShare<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
@@ -56,19 +43,13 @@ impl<
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > Copy for SignatureShare<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Copy
+    for SignatureShare<C>
 {
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > Clone for SignatureShare<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Clone
+    for SignatureShare<C>
 {
     fn clone(&self) -> Self {
         match self {
@@ -79,11 +60,8 @@ impl<
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > subtle::ConditionallySelectable for SignatureShare<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
+    subtle::ConditionallySelectable for SignatureShare<C>
 {
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
         match (a, b) {
@@ -103,12 +81,7 @@ impl<
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > SignatureShare<C>
-{
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> SignatureShare<C> {
     /// Verify the signature share with the public key share
     pub fn verify<B: AsRef<[u8]>>(&self, pks: &PublicKeyShare<C>, msg: B) -> BlsResult<()> {
         pks.verify(self, msg)

@@ -135,5 +135,3 @@ pub mod fixed_arr {
         }
     }
 }
-
-

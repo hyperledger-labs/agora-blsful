@@ -3,11 +3,7 @@ use bls12_381_plus::elliptic_curve::Group;
 
 /// Represents a BLS signature for multiple signatures that signed different messages
 #[derive(PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub enum MultiSignature<
-    C: BlsSignatureBasic
-        + BlsSignatureMessageAugmentation
-        + BlsSignaturePop
-> {
+pub enum MultiSignature<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> {
     /// The basic signature scheme
     Basic(
         #[serde(serialize_with = "traits::signature::serialize::<C, _>")]
@@ -28,22 +24,16 @@ pub enum MultiSignature<
     ),
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > Default for MultiSignature<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Default
+    for MultiSignature<C>
 {
     fn default() -> Self {
         Self::ProofOfPossession(<C as Pairing>::Signature::default())
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > core::fmt::Display for MultiSignature<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Display
+    for MultiSignature<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
@@ -54,11 +44,8 @@ impl<
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > core::fmt::Debug for MultiSignature<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Debug
+    for MultiSignature<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
@@ -69,19 +56,13 @@ impl<
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > Copy for MultiSignature<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Copy
+    for MultiSignature<C>
 {
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > Clone for MultiSignature<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Clone
+    for MultiSignature<C>
 {
     fn clone(&self) -> Self {
         match self {
@@ -92,11 +73,8 @@ impl<
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > subtle::ConditionallySelectable for MultiSignature<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
+    subtle::ConditionallySelectable for MultiSignature<C>
 {
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
         match (a, b) {
@@ -116,11 +94,8 @@ impl<
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > TryFrom<&[Signature<C>]> for MultiSignature<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
+    TryFrom<&[Signature<C>]> for MultiSignature<C>
 {
     type Error = BlsError;
 
@@ -147,12 +122,7 @@ impl<
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-    > MultiSignature<C>
-{
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> MultiSignature<C> {
     /// Verify the multi-signature using the multi-public key
     pub fn verify<B: AsRef<[u8]>>(&self, pk: MultiPublicKey<C>, msg: B) -> BlsResult<()> {
         match self {

@@ -1,7 +1,7 @@
 mod utils;
 use blsful::*;
-use utils::*;
 use rstest::*;
+use utils::*;
 
 #[test]
 fn signatures_work() {
@@ -52,15 +52,11 @@ fn proof_of_possession_works() {
 #[rstest]
 #[case::g1(Bls12381G1)]
 #[case::g2(Bls12381G2)]
-fn shares_work<C: BlsSignatureBasic
-+ BlsSignatureMessageAugmentation
-+ BlsSignaturePop
-+ BlsSignCrypt
-+ BlsTimeCrypt
-+ BlsSignatureProof
-+ BlsSerde
-+ PartialEq
-+ Eq>(#[case]_c: C) {
+fn shares_work<
+    C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop + PartialEq + Eq,
+>(
+    #[case] _c: C,
+) {
     let sk = SecretKey::<C>::new();
     let pko = sk.public_key();
     let shares = sk.split_with_rng(2, 3, rand_core::OsRng).unwrap();
@@ -93,13 +89,9 @@ fn shares_work<C: BlsSignatureBasic
 #[rstest]
 #[case::g1(Bls12381G1)]
 #[case::g2(Bls12381G2)]
-fn multisigs_work<C: BlsSignatureBasic
-+ BlsSignatureMessageAugmentation
-+ BlsSignaturePop
-+ BlsSignCrypt
-+ BlsTimeCrypt
-+ BlsSignatureProof
-+ BlsSerde>(#[case]_c: C) {
+fn multisigs_work<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>(
+    #[case] _c: C,
+) {
     let sk1 = SecretKey::<C>::new();
     let sk2 = SecretKey::<C>::new();
     let sk3 = SecretKey::<C>::new();
@@ -141,13 +133,9 @@ fn multisigs_work<C: BlsSignatureBasic
 #[rstest]
 #[case::g1(Bls12381G1)]
 #[case::g2(Bls12381G2)]
-fn aggegratesigs_work<C: BlsSignatureBasic
-+ BlsSignatureMessageAugmentation
-+ BlsSignaturePop
-+ BlsSignCrypt
-+ BlsTimeCrypt
-+ BlsSignatureProof
-+ BlsSerde>(#[case] _c: C) {
+fn aggegratesigs_work<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>(
+    #[case] _c: C,
+) {
     let sk1 = SecretKey::<C>::new();
     let sk2 = SecretKey::<C>::new();
     let sk3 = SecretKey::<C>::new();

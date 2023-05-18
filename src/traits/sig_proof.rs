@@ -3,7 +3,7 @@ use bls12_381_plus::elliptic_curve::{Field, Group};
 use bls12_381_plus::group::GroupEncoding;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-const SALT: &'static [u8] = b"BLS_POK__BLS12381_XOF:HKDF-SHA2-256_";
+const SALT: &[u8] = b"BLS_POK__BLS12381_XOF:HKDF-SHA2-256_";
 
 /// Methods for creating a signature proof of knowledge as in
 /// <https://miracl.com/assets/pdf-downloads/mpin4.pdf>

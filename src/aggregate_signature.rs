@@ -4,9 +4,7 @@ use bls12_381_plus::elliptic_curve::Group;
 /// Represents a BLS signature for multiple signatures that signed different messages
 #[derive(PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum AggregateSignature<
-    C: BlsSignatureBasic
-    + BlsSignatureMessageAugmentation
-    + BlsSignaturePop,
+    C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop,
 > {
     /// The basic signature scheme
     Basic(
@@ -28,21 +26,16 @@ pub enum AggregateSignature<
     ),
 }
 
-impl<C: BlsSignatureBasic
-+ BlsSignatureMessageAugmentation
-+ BlsSignaturePop,
-    > Default for AggregateSignature<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Default
+    for AggregateSignature<C>
 {
     fn default() -> Self {
         Self::ProofOfPossession(<C as Pairing>::Signature::default())
     }
 }
 
-impl<
-    C: BlsSignatureBasic
-    + BlsSignatureMessageAugmentation
-    + BlsSignaturePop,
-    > core::fmt::Display for AggregateSignature<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Display
+    for AggregateSignature<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
@@ -53,11 +46,8 @@ impl<
     }
 }
 
-impl<
-    C: BlsSignatureBasic
-    + BlsSignatureMessageAugmentation
-    + BlsSignaturePop,
-    > core::fmt::Debug for AggregateSignature<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Debug
+    for AggregateSignature<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
@@ -68,19 +58,13 @@ impl<
     }
 }
 
-impl<
-    C: BlsSignatureBasic
-    + BlsSignatureMessageAugmentation
-    + BlsSignaturePop,
-    > Copy for AggregateSignature<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Copy
+    for AggregateSignature<C>
 {
 }
 
-impl<
-    C: BlsSignatureBasic
-    + BlsSignatureMessageAugmentation
-    + BlsSignaturePop,
-    > Clone for AggregateSignature<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Clone
+    for AggregateSignature<C>
 {
     fn clone(&self) -> Self {
         match self {
@@ -91,11 +75,8 @@ impl<
     }
 }
 
-impl<
-    C: BlsSignatureBasic
-    + BlsSignatureMessageAugmentation
-    + BlsSignaturePop,
-    > subtle::ConditionallySelectable for AggregateSignature<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
+    subtle::ConditionallySelectable for AggregateSignature<C>
 {
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
         match (a, b) {
@@ -115,11 +96,8 @@ impl<
     }
 }
 
-impl<
-    C: BlsSignatureBasic
-    + BlsSignatureMessageAugmentation
-    + BlsSignaturePop,
-    > TryFrom<&[Signature<C>]> for AggregateSignature<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
+    TryFrom<&[Signature<C>]> for AggregateSignature<C>
 {
     type Error = BlsError;
 
@@ -144,10 +122,8 @@ impl<
     }
 }
 
-impl<C: BlsSignatureBasic
-+ BlsSignatureMessageAugmentation
-+ BlsSignaturePop,
-    > AggregateSignature<C>
+impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
+    AggregateSignature<C>
 {
     /// Accumulate multiple signatures into a single signature
     /// Verify fails if any signed message is a duplicate
