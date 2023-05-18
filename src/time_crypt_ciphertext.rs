@@ -7,10 +7,6 @@ pub struct TimeCryptCiphertext<
     C: BlsSignatureBasic
         + BlsSignatureMessageAugmentation
         + BlsSignaturePop
-        + BlsSignCrypt
-        + BlsTimeCrypt
-        + BlsSignatureProof
-        + BlsSerde,
 > {
     /// The `u` component
     #[serde(serialize_with = "traits::public_key::serialize::<C, _>")]
@@ -28,10 +24,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > TimeCryptCiphertext<C>
 {
     /// Decrypt the time lock ciphertext using a signature over an identifier

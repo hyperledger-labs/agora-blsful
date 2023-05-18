@@ -7,10 +7,6 @@ pub struct PublicKey<
     C: BlsSignatureBasic
         + BlsSignatureMessageAugmentation
         + BlsSignaturePop
-        + BlsSignCrypt
-        + BlsTimeCrypt
-        + BlsSignatureProof
-        + BlsSerde,
 >(
     /// The BLS public key raw value
     #[serde(serialize_with = "traits::public_key::serialize::<C, _>")]
@@ -22,10 +18,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > From<&SecretKey<C>> for PublicKey<C>
 {
     fn from(s: &SecretKey<C>) -> Self {
@@ -37,10 +29,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > core::fmt::Display for PublicKey<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
@@ -52,10 +40,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > core::fmt::Debug for PublicKey<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
@@ -67,10 +51,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > Copy for PublicKey<C>
 {
 }
@@ -79,10 +59,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > Clone for PublicKey<C>
 {
     fn clone(&self) -> Self {
@@ -94,10 +70,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > subtle::ConditionallySelectable for PublicKey<C>
 {
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
@@ -111,10 +83,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > PublicKey<C>
 {
     /// Encrypt a message using signcryption

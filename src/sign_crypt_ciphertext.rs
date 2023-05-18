@@ -7,10 +7,6 @@ pub struct SignCryptCiphertext<
     C: BlsSignatureBasic
         + BlsSignatureMessageAugmentation
         + BlsSignaturePop
-        + BlsSignCrypt
-        + BlsTimeCrypt
-        + BlsSignatureProof
-        + BlsSerde,
 > {
     /// The `u` component
     #[serde(serialize_with = "traits::public_key::serialize::<C, _>")]
@@ -30,10 +26,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > core::fmt::Display for SignCryptCiphertext<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -49,10 +41,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > SignCryptCiphertext<C>
 {
     /// Create a decryption share from a secret key share
@@ -109,20 +97,12 @@ pub struct SignCryptDecryptionKey<
     C: BlsSignatureBasic
         + BlsSignatureMessageAugmentation
         + BlsSignaturePop
-        + BlsSignCrypt
-        + BlsTimeCrypt
-        + BlsSignatureProof
-        + BlsSerde,
 >(pub <C as Pairing>::PublicKey);
 
 impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > Serialize for SignCryptDecryptionKey<C>
 {
     fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
@@ -138,10 +118,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > Deserialize<'de> for SignCryptDecryptionKey<C>
 {
     fn deserialize<D>(d: D) -> Result<Self, D::Error>
@@ -156,10 +132,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > core::fmt::Debug for SignCryptDecryptionKey<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
@@ -171,10 +143,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > Clone for SignCryptDecryptionKey<C>
 {
     fn clone(&self) -> Self {
@@ -186,10 +154,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > SignCryptDecryptionKey<C>
 {
     /// Decrypt signcrypt ciphertext

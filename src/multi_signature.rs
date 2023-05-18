@@ -7,10 +7,6 @@ pub enum MultiSignature<
     C: BlsSignatureBasic
         + BlsSignatureMessageAugmentation
         + BlsSignaturePop
-        + BlsSignCrypt
-        + BlsTimeCrypt
-        + BlsSignatureProof
-        + BlsSerde,
 > {
     /// The basic signature scheme
     Basic(
@@ -36,10 +32,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > Default for MultiSignature<C>
 {
     fn default() -> Self {
@@ -51,10 +43,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > core::fmt::Display for MultiSignature<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
@@ -70,10 +58,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > core::fmt::Debug for MultiSignature<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
@@ -89,10 +73,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > Copy for MultiSignature<C>
 {
 }
@@ -101,10 +81,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > Clone for MultiSignature<C>
 {
     fn clone(&self) -> Self {
@@ -120,10 +96,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > subtle::ConditionallySelectable for MultiSignature<C>
 {
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
@@ -148,10 +120,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > TryFrom<&[Signature<C>]> for MultiSignature<C>
 {
     type Error = BlsError;
@@ -183,10 +151,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > MultiSignature<C>
 {
     /// Verify the multi-signature using the multi-public key

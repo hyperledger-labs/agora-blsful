@@ -108,12 +108,21 @@ impl BlsSignaturePop for Bls12381G2 {
 }
 
 impl BlsSignatureProof for Bls12381G2 {
-    const DST: &'static [u8] = b"BLS_POK_BLS12381G2_XMD:SHA-256_RO_POK_";
 }
 
 impl BlsSignCrypt for Bls12381G2 {}
 
 impl BlsTimeCrypt for Bls12381G2 {}
+
+impl BlsElGamal for Bls12381G2 {
+    fn scalar_from_bytes_wide(bytes: &[u8; 64]) -> <Self::PublicKey as Group>::Scalar {
+        Scalar::from_bytes_wide(bytes)
+    }
+}
+
+impl BlsMultiKey for Bls12381G2 {}
+
+impl BlsMultiSignature for Bls12381G2 {}
 
 impl Bls12381G2 {
     /// Create a new random secret key

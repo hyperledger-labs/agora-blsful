@@ -3,6 +3,8 @@ use bls12_381_plus::elliptic_curve::{Field, Group};
 use bls12_381_plus::group::GroupEncoding;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
+const SALT: &'static [u8] = b"BLS_POK__BLS12381_XOF:HKDF-SHA2-256_";
+
 /// Methods for creating a signature proof of knowledge as in
 /// <https://miracl.com/assets/pdf-downloads/mpin4.pdf>
 pub trait BlsSignatureProof:
@@ -10,9 +12,6 @@ pub trait BlsSignatureProof:
     + HashToPoint<Output = Self::Signature>
     + HashToScalar<Output = <Self::Signature as Group>::Scalar>
 {
-    /// The domain separation tag for the hash function
-    const DST: &'static [u8];
-
     /// Create the value `U` and `x`
     fn generate_commitment<B: AsRef<[u8]>, D: AsRef<[u8]>>(
         msg: B,
@@ -43,7 +42,7 @@ pub trait BlsSignatureProof:
         let mut bytes = vec![0u8; 8 + u_len];
         bytes[..u_len].copy_from_slice(u_ref);
         bytes[u_len..].copy_from_slice(&t.to_le_bytes());
-        Self::hash_to_scalar(&bytes, Self::DST)
+        Self::hash_to_scalar(&bytes, SALT)
     }
 
     /// Create the value `V`

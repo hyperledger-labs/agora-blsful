@@ -7,10 +7,6 @@ pub enum ProofOfKnowledge<
     C: BlsSignatureBasic
         + BlsSignatureMessageAugmentation
         + BlsSignaturePop
-        + BlsSignCrypt
-        + BlsTimeCrypt
-        + BlsSignatureProof
-        + BlsSerde,
 > {
     /// The basic signature scheme
     Basic {
@@ -51,10 +47,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > Default for ProofOfKnowledge<C>
 {
     fn default() -> Self {
@@ -69,10 +61,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > core::fmt::Display for ProofOfKnowledge<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -92,10 +80,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > core::fmt::Debug for ProofOfKnowledge<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -115,10 +99,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > Copy for ProofOfKnowledge<C>
 {
 }
@@ -127,10 +107,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > Clone for ProofOfKnowledge<C>
 {
     fn clone(&self) -> Self {
@@ -146,10 +122,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > subtle::ConditionallySelectable for ProofOfKnowledge<C>
 {
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
@@ -181,10 +153,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > ProofOfKnowledge<C>
 {
     /// Verify the proof of knowledge
@@ -229,10 +197,6 @@ pub struct ProofOfKnowledgeTimestamp<
     C: BlsSignatureBasic
         + BlsSignatureMessageAugmentation
         + BlsSignaturePop
-        + BlsSignCrypt
-        + BlsTimeCrypt
-        + BlsSignatureProof
-        + BlsSerde,
 > {
     /// The inner proof of knowledge
     pub proof: ProofOfKnowledge<C>,
@@ -244,10 +208,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > Default for ProofOfKnowledgeTimestamp<C>
 {
     fn default() -> Self {
@@ -265,10 +225,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > core::fmt::Display for ProofOfKnowledgeTimestamp<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -284,10 +240,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > core::fmt::Debug for ProofOfKnowledgeTimestamp<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -303,10 +255,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > Copy for ProofOfKnowledgeTimestamp<C>
 {
 }
@@ -315,10 +263,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > Clone for ProofOfKnowledgeTimestamp<C>
 {
     fn clone(&self) -> Self {
@@ -333,10 +277,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > subtle::ConditionallySelectable for ProofOfKnowledgeTimestamp<C>
 {
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
@@ -351,10 +291,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > ProofOfKnowledgeTimestamp<C>
 {
     /// Create a new signature proof of knowledge using a timestamp

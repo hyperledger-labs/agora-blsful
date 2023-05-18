@@ -2,7 +2,7 @@ use crate::*;
 use bls12_381_plus::elliptic_curve::{group::GroupEncoding, Group};
 
 /// BLS signature proof of possession trait
-pub trait BlsSignaturePop: BlsSignatureCore {
+pub trait BlsSignaturePop: BlsSignatureCore + BlsMultiSignature + BlsMultiKey {
     /// The signature domain separation tag
     const SIG_DST: &'static [u8];
     /// The proof of possession domain separation tag

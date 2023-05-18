@@ -1,4 +1,3 @@
-use crate::traits::{BlsSignCrypt, BlsSignatureCore, BlsSignatureProof, BlsTimeCrypt};
 use crate::*;
 use bls12_381_plus::elliptic_curve::{Group, PrimeField};
 
@@ -19,10 +18,6 @@ pub struct SecretKey<
     C: BlsSignatureBasic
         + BlsSignatureMessageAugmentation
         + BlsSignaturePop
-        + BlsSignCrypt
-        + BlsTimeCrypt
-        + BlsSignatureProof
-        + BlsSerde,
 >(
     /// The secret key raw value
     #[serde(serialize_with = "traits::scalar::serialize::<C, _>")]
@@ -34,10 +29,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > From<SecretKey<C>> for [u8; SECRET_KEY_BYTES]
 {
     fn from(sk: SecretKey<C>) -> [u8; SECRET_KEY_BYTES] {
@@ -50,10 +41,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > From<&'a SecretKey<C>> for [u8; SECRET_KEY_BYTES]
 {
     fn from(sk: &'a SecretKey<C>) -> [u8; SECRET_KEY_BYTES] {
@@ -65,10 +52,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > SecretKey<C>
 {
     /// Create a new random secret key

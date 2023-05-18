@@ -5,12 +5,8 @@ use bls12_381_plus::elliptic_curve::Group;
 #[derive(PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum AggregateSignature<
     C: BlsSignatureBasic
-        + BlsSignatureMessageAugmentation
-        + BlsSignaturePop
-        + BlsSignCrypt
-        + BlsTimeCrypt
-        + BlsSignatureProof
-        + BlsSerde,
+    + BlsSignatureMessageAugmentation
+    + BlsSignaturePop,
 > {
     /// The basic signature scheme
     Basic(
@@ -32,14 +28,9 @@ pub enum AggregateSignature<
     ),
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
+impl<C: BlsSignatureBasic
++ BlsSignatureMessageAugmentation
++ BlsSignaturePop,
     > Default for AggregateSignature<C>
 {
     fn default() -> Self {
@@ -48,13 +39,9 @@ impl<
 }
 
 impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
+    C: BlsSignatureBasic
+    + BlsSignatureMessageAugmentation
+    + BlsSignaturePop,
     > core::fmt::Display for AggregateSignature<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
@@ -67,13 +54,9 @@ impl<
 }
 
 impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
+    C: BlsSignatureBasic
+    + BlsSignatureMessageAugmentation
+    + BlsSignaturePop,
     > core::fmt::Debug for AggregateSignature<C>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
@@ -86,25 +69,17 @@ impl<
 }
 
 impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
+    C: BlsSignatureBasic
+    + BlsSignatureMessageAugmentation
+    + BlsSignaturePop,
     > Copy for AggregateSignature<C>
 {
 }
 
 impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
+    C: BlsSignatureBasic
+    + BlsSignatureMessageAugmentation
+    + BlsSignaturePop,
     > Clone for AggregateSignature<C>
 {
     fn clone(&self) -> Self {
@@ -117,13 +92,9 @@ impl<
 }
 
 impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
+    C: BlsSignatureBasic
+    + BlsSignatureMessageAugmentation
+    + BlsSignaturePop,
     > subtle::ConditionallySelectable for AggregateSignature<C>
 {
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
@@ -145,13 +116,9 @@ impl<
 }
 
 impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
+    C: BlsSignatureBasic
+    + BlsSignatureMessageAugmentation
+    + BlsSignaturePop,
     > TryFrom<&[Signature<C>]> for AggregateSignature<C>
 {
     type Error = BlsError;
@@ -177,14 +144,9 @@ impl<
     }
 }
 
-impl<
-        C: BlsSignatureBasic
-            + BlsSignatureMessageAugmentation
-            + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
+impl<C: BlsSignatureBasic
++ BlsSignatureMessageAugmentation
++ BlsSignaturePop,
     > AggregateSignature<C>
 {
     /// Accumulate multiple signatures into a single signature

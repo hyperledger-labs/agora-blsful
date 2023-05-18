@@ -22,12 +22,14 @@ pub trait BlsSignCrypt:
     + HashToScalar<Output = <Self::Signature as Group>::Scalar>
 {
     /// Create a new ciphertext
-    fn seal(
+    fn seal<B: AsRef<[u8]>>(
         pk: Self::PublicKey,
-        message: &[u8],
+        message: B,
         dst: &[u8],
     ) -> (Self::PublicKey, Vec<u8>, Self::Signature) {
         const SALT: &[u8] = b"SIGNCRYPT_BLS12381_XOF:HKDF-SHA2-256_";
+        let message = message.as_ref();
+
         // r ← Zq
         let r = Self::hash_to_scalar(get_crypto_rng().gen::<[u8; 32]>(), SALT);
         // U = P^r

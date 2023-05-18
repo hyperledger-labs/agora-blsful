@@ -39,10 +39,14 @@ mod signature;
 mod signature_share;
 mod time_crypt_ciphertext;
 mod traits;
+mod elgamal_ciphertext;
+mod elgamal_proof;
 
 pub use error::*;
 pub use impls::*;
 
+pub use elgamal_ciphertext::*;
+pub use elgamal_proof::*;
 pub use aggregate_signature::*;
 pub use multi_public_key::*;
 pub use multi_signature::*;

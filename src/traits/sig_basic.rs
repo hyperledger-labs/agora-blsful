@@ -3,7 +3,7 @@ use bls12_381_plus::elliptic_curve::group::Group;
 use std::collections::HashMap;
 
 /// BLS signature basic trait
-pub trait BlsSignatureBasic: BlsSignatureCore {
+pub trait BlsSignatureBasic: BlsSignatureCore + BlsMultiSignature + BlsMultiKey {
     /// The domain separation tag
     const DST: &'static [u8];
 

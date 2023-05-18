@@ -13,10 +13,6 @@ pub struct SecretKeyShare<
     C: BlsSignatureBasic
         + BlsSignatureMessageAugmentation
         + BlsSignaturePop
-        + BlsSignCrypt
-        + BlsTimeCrypt
-        + BlsSignatureProof
-        + BlsSerde,
 >(
     #[serde(serialize_with = "traits::secret_key_share::serialize::<C, _>")]
     #[serde(deserialize_with = "traits::secret_key_share::deserialize::<C, _>")]
@@ -27,10 +23,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > Clone for SecretKeyShare<C>
 {
     fn clone(&self) -> Self {
@@ -42,10 +34,6 @@ impl<
         C: BlsSignatureBasic
             + BlsSignatureMessageAugmentation
             + BlsSignaturePop
-            + BlsSignCrypt
-            + BlsTimeCrypt
-            + BlsSignatureProof
-            + BlsSerde,
     > SecretKeyShare<C>
 {
     /// Compute the public key

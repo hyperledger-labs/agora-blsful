@@ -25,6 +25,7 @@ arrayref = "0.3"
 bls12_381_plus = "0.8"
 hex = "0.4"
 hkdf = { version = "0.12", default-features = false }
+merlin = "3"
 pairing = "0.23"
 rand = "0.8"
 rand_core = "0.6"
