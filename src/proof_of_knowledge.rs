@@ -3,8 +3,7 @@ use subtle::Choice;
 
 /// A signature proof of knowledge
 #[derive(PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub enum ProofOfKnowledge<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
-{
+pub enum ProofOfKnowledge<C: BlsSignatureImpl> {
     /// The basic signature scheme
     Basic {
         /// The commitment value
@@ -40,9 +39,7 @@ pub enum ProofOfKnowledge<C: BlsSignatureBasic + BlsSignatureMessageAugmentation
     },
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Default
-    for ProofOfKnowledge<C>
-{
+impl<C: BlsSignatureImpl> Default for ProofOfKnowledge<C> {
     fn default() -> Self {
         Self::ProofOfPossession {
             u: <C as Pairing>::Signature::default(),
@@ -51,9 +48,7 @@ impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> D
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Display
-    for ProofOfKnowledge<C>
-{
+impl<C: BlsSignatureImpl> core::fmt::Display for ProofOfKnowledge<C> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::Basic { u, v } => write!(f, "Basic{{ u: {}, v: {} }}", u, v),
@@ -67,9 +62,7 @@ impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> c
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Debug
-    for ProofOfKnowledge<C>
-{
+impl<C: BlsSignatureImpl> core::fmt::Debug for ProofOfKnowledge<C> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::Basic { u, v } => write!(f, "Basic{{ u: {:?}, v: {:?} }}", u, v),
@@ -83,14 +76,9 @@ impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> c
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Copy
-    for ProofOfKnowledge<C>
-{
-}
+impl<C: BlsSignatureImpl> Copy for ProofOfKnowledge<C> {}
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Clone
-    for ProofOfKnowledge<C>
-{
+impl<C: BlsSignatureImpl> Clone for ProofOfKnowledge<C> {
     fn clone(&self) -> Self {
         match self {
             Self::Basic { u, v } => Self::Basic { u: *u, v: *v },
@@ -100,9 +88,7 @@ impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> C
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
-    subtle::ConditionallySelectable for ProofOfKnowledge<C>
-{
+impl<C: BlsSignatureImpl> subtle::ConditionallySelectable for ProofOfKnowledge<C> {
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
         match (a, b) {
             (Self::Basic { u: u1, v: v1 }, Self::Basic { u: u2, v: v2 }) => Self::Basic {
@@ -128,7 +114,7 @@ impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> ProofOfKnowledge<C> {
+impl<C: BlsSignatureImpl> ProofOfKnowledge<C> {
     /// Verify the proof of knowledge
     pub fn verify<B: AsRef<[u8]>>(
         &self,
@@ -167,18 +153,14 @@ impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> P
 
 /// A signature proof of knowledge based on a timestamp
 #[derive(PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub struct ProofOfKnowledgeTimestamp<
-    C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop,
-> {
+pub struct ProofOfKnowledgeTimestamp<C: BlsSignatureImpl> {
     /// The inner proof of knowledge
     pub proof: ProofOfKnowledge<C>,
     /// The timestamp associated with the proof
     pub timestamp: u64,
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Default
-    for ProofOfKnowledgeTimestamp<C>
-{
+impl<C: BlsSignatureImpl> Default for ProofOfKnowledgeTimestamp<C> {
     fn default() -> Self {
         Self {
             proof: ProofOfKnowledge::ProofOfPossession {
@@ -190,9 +172,7 @@ impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> D
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Display
-    for ProofOfKnowledgeTimestamp<C>
-{
+impl<C: BlsSignatureImpl> core::fmt::Display for ProofOfKnowledgeTimestamp<C> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(
             f,
@@ -202,9 +182,7 @@ impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> c
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Debug
-    for ProofOfKnowledgeTimestamp<C>
-{
+impl<C: BlsSignatureImpl> core::fmt::Debug for ProofOfKnowledgeTimestamp<C> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(
             f,
@@ -214,14 +192,9 @@ impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> c
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Copy
-    for ProofOfKnowledgeTimestamp<C>
-{
-}
+impl<C: BlsSignatureImpl> Copy for ProofOfKnowledgeTimestamp<C> {}
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Clone
-    for ProofOfKnowledgeTimestamp<C>
-{
+impl<C: BlsSignatureImpl> Clone for ProofOfKnowledgeTimestamp<C> {
     fn clone(&self) -> Self {
         Self {
             proof: self.proof,
@@ -230,9 +203,7 @@ impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> C
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
-    subtle::ConditionallySelectable for ProofOfKnowledgeTimestamp<C>
-{
+impl<C: BlsSignatureImpl> subtle::ConditionallySelectable for ProofOfKnowledgeTimestamp<C> {
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
         Self {
             proof: ProofOfKnowledge::conditional_select(&a.proof, &b.proof, choice),
@@ -241,9 +212,7 @@ impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
-    ProofOfKnowledgeTimestamp<C>
-{
+impl<C: BlsSignatureImpl> ProofOfKnowledgeTimestamp<C> {
     /// Create a new signature proof of knowledge using a timestamp
     pub fn generate<B: AsRef<[u8]>>(msg: B, signature: Signature<C>) -> BlsResult<Self> {
         match signature {

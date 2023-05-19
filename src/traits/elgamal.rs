@@ -68,6 +68,7 @@ pub trait BlsElGamal: Pairing + HashToScalar<Output = <Self::PublicKey as Group>
     }
 
     /// Encrypt a scalar and generate a ZKP
+    #[allow(clippy::type_complexity)]
     fn seal_scalar_with_proof(
         pk: Self::PublicKey,
         message: <Self::PublicKey as Group>::Scalar,

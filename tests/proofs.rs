@@ -4,13 +4,9 @@ use rstest::*;
 use utils::*;
 
 #[rstest]
-#[case::g1(Bls12381G1)]
-#[case::g2(Bls12381G2)]
-fn proof_of_knowledge_works<
-    C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop + Copy,
->(
-    #[case] _c: C,
-) {
+#[case::g1(Bls12381G1Impl)]
+#[case::g2(Bls12381G2Impl)]
+fn proof_of_knowledge_works<C: BlsSignatureImpl + Copy>(#[case] _c: C) {
     let sk = SecretKey::<C>::new();
     let pk = sk.public_key();
     let sig = sk.sign(SignatureSchemes::Basic, TEST_MSG).unwrap();
@@ -27,13 +23,9 @@ fn proof_of_knowledge_works<
 }
 
 #[rstest]
-#[case::g1(Bls12381G1)]
-#[case::g2(Bls12381G2)]
-fn proof_of_knowledge_timestamp_works<
-    C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop,
->(
-    #[case] _c: C,
-) {
+#[case::g1(Bls12381G1Impl)]
+#[case::g2(Bls12381G2Impl)]
+fn proof_of_knowledge_timestamp_works<C: BlsSignatureImpl>(#[case] _c: C) {
     let sk = SecretKey::<C>::new();
     let pk = sk.public_key();
     let sig = sk

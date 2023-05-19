@@ -4,16 +4,9 @@ use rstest::*;
 use utils::*;
 
 #[rstest]
-#[case::g1(Bls12381G1)]
-#[case::g2(Bls12381G2)]
-fn basic_types_serialize_json<
-    C: BlsSignatureBasic
-        + BlsSignatureMessageAugmentation
-        + BlsSignaturePop
-        + PartialEq
-        + Eq
-        + std::fmt::Debug,
->(
+#[case::g1(Bls12381G1Impl)]
+#[case::g2(Bls12381G2Impl)]
+fn basic_types_serialize_json<C: BlsSignatureImpl + PartialEq + Eq + std::fmt::Debug>(
     #[case] _c: C,
 ) {
     let sk = SecretKey::<C>::random(MockRng::default());
@@ -68,16 +61,9 @@ fn basic_types_serialize_json<
 }
 
 #[rstest]
-#[case::g1(Bls12381G1)]
-#[case::g2(Bls12381G2)]
-fn basic_types_serialize_binary<
-    C: BlsSignatureBasic
-        + BlsSignatureMessageAugmentation
-        + BlsSignaturePop
-        + PartialEq
-        + Eq
-        + std::fmt::Debug,
->(
+#[case::g1(Bls12381G1Impl)]
+#[case::g2(Bls12381G2Impl)]
+fn basic_types_serialize_binary<C: BlsSignatureImpl + PartialEq + Eq + std::fmt::Debug>(
     #[case] _c: C,
 ) {
     let sk = SecretKey::<C>::random(MockRng::default());
@@ -132,12 +118,10 @@ fn basic_types_serialize_binary<
 }
 
 #[rstest]
-#[case::g1(Bls12381G1)]
-#[case::g2(Bls12381G2)]
+#[case::g1(Bls12381G1Impl)]
+#[case::g2(Bls12381G2Impl)]
 fn shares_serialize_json<
-    C: BlsSignatureBasic
-        + BlsSignatureMessageAugmentation
-        + BlsSignaturePop
+    C: BlsSignatureImpl
         + PartialEq
         + Eq
         + std::fmt::Debug

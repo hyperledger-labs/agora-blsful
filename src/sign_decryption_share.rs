@@ -7,29 +7,21 @@ use crate::*;
 /// creating partial signatures which can be
 /// combined into a complete signature
 #[derive(PartialEq, Eq, Serialize, Deserialize)]
-pub struct SignDecryptionShare<
-    C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop,
->(pub <C as Pairing>::PublicKeyShare);
+pub struct SignDecryptionShare<C: BlsSignatureImpl>(pub <C as Pairing>::PublicKeyShare);
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Clone
-    for SignDecryptionShare<C>
-{
+impl<C: BlsSignatureImpl> Clone for SignDecryptionShare<C> {
     fn clone(&self) -> Self {
         Self(self.0)
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Debug
-    for SignDecryptionShare<C>
-{
+impl<C: BlsSignatureImpl> core::fmt::Debug for SignDecryptionShare<C> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{:?}", self.0)
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
-    SignDecryptionShare<C>
-{
+impl<C: BlsSignatureImpl> SignDecryptionShare<C> {
     /// Verify the signcrypt decryption share with the corresponding public key and ciphertext
     pub fn verify(&self, pks: &PublicKeyShare<C>, sig: &SignCryptCiphertext<C>) -> BlsResult<()> {
         let share = self.0.as_group_element::<<C as Pairing>::PublicKey>()?;

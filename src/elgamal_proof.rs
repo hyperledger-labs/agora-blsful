@@ -3,7 +3,7 @@ use bls12_381_plus::elliptic_curve::Group;
 
 /// A Discrete Log Proof tied to a specific ElGamal ciphertext
 #[derive(Default, PartialEq, Eq, Serialize, Deserialize)]
-pub struct ElGamalProof<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> {
+pub struct ElGamalProof<C: BlsSignatureImpl> {
     /// The el-gamal ciphertext
     pub ciphertext: ElGamalCiphertext<C>,
     /// The proof of encrypted message
@@ -20,9 +20,7 @@ pub struct ElGamalProof<C: BlsSignatureBasic + BlsSignatureMessageAugmentation +
     pub challenge: <<C as Pairing>::PublicKey as Group>::Scalar,
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Display
-    for ElGamalProof<C>
-{
+impl<C: BlsSignatureImpl> core::fmt::Display for ElGamalProof<C> {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         write!(
             f,
@@ -32,9 +30,7 @@ impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> c
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Debug
-    for ElGamalProof<C>
-{
+impl<C: BlsSignatureImpl> core::fmt::Debug for ElGamalProof<C> {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         write!(
             f,
@@ -44,14 +40,9 @@ impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> c
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Copy
-    for ElGamalProof<C>
-{
-}
+impl<C: BlsSignatureImpl> Copy for ElGamalProof<C> {}
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Clone
-    for ElGamalProof<C>
-{
+impl<C: BlsSignatureImpl> Clone for ElGamalProof<C> {
     fn clone(&self) -> Self {
         Self {
             ciphertext: self.ciphertext,
@@ -62,7 +53,7 @@ impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> C
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> ElGamalProof<C> {
+impl<C: BlsSignatureImpl> ElGamalProof<C> {
     /// Verify the proof and ciphertext are valid
     pub fn verify(&self, pk: PublicKey<C>) -> BlsResult<()> {
         <C as BlsElGamal>::verify_proof(

@@ -39,7 +39,7 @@ fn proof_of_possession_works() {
     let pop = sk.proof_of_possession().unwrap();
     assert!(pop.verify(pk).is_ok());
 
-    let sk = SecretKey::<Bls12381G2>(sk.0);
+    let sk = SecretKey::<Bls12381G2Impl>(sk.0);
     let pk = sk.public_key();
     let pop = sk.proof_of_possession().unwrap();
     assert!(pop.verify(pk).is_ok());
@@ -50,13 +50,9 @@ fn proof_of_possession_works() {
 }
 
 #[rstest]
-#[case::g1(Bls12381G1)]
-#[case::g2(Bls12381G2)]
-fn shares_work<
-    C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop + PartialEq + Eq,
->(
-    #[case] _c: C,
-) {
+#[case::g1(Bls12381G1Impl)]
+#[case::g2(Bls12381G2Impl)]
+fn shares_work<C: BlsSignatureImpl + PartialEq + Eq>(#[case] _c: C) {
     let sk = SecretKey::<C>::new();
     let pko = sk.public_key();
     let shares = sk.split_with_rng(2, 3, rand_core::OsRng).unwrap();
@@ -87,11 +83,9 @@ fn shares_work<
 }
 
 #[rstest]
-#[case::g1(Bls12381G1)]
-#[case::g2(Bls12381G2)]
-fn multisigs_work<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>(
-    #[case] _c: C,
-) {
+#[case::g1(Bls12381G1Impl)]
+#[case::g2(Bls12381G2Impl)]
+fn multisigs_work<C: BlsSignatureImpl>(#[case] _c: C) {
     let sk1 = SecretKey::<C>::new();
     let sk2 = SecretKey::<C>::new();
     let sk3 = SecretKey::<C>::new();
@@ -131,11 +125,9 @@ fn multisigs_work<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSi
 }
 
 #[rstest]
-#[case::g1(Bls12381G1)]
-#[case::g2(Bls12381G2)]
-fn aggegratesigs_work<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>(
-    #[case] _c: C,
-) {
+#[case::g1(Bls12381G1Impl)]
+#[case::g2(Bls12381G2Impl)]
+fn aggegratesigs_work<C: BlsSignatureImpl>(#[case] _c: C) {
     let sk1 = SecretKey::<C>::new();
     let sk2 = SecretKey::<C>::new();
     let sk3 = SecretKey::<C>::new();

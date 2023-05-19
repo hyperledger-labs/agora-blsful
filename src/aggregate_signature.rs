@@ -3,9 +3,7 @@ use bls12_381_plus::elliptic_curve::Group;
 
 /// Represents a BLS signature for multiple signatures that signed different messages
 #[derive(PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub enum AggregateSignature<
-    C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop,
-> {
+pub enum AggregateSignature<C: BlsSignatureImpl> {
     /// The basic signature scheme
     Basic(
         #[serde(serialize_with = "traits::signature::serialize::<C, _>")]
@@ -26,17 +24,13 @@ pub enum AggregateSignature<
     ),
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Default
-    for AggregateSignature<C>
-{
+impl<C: BlsSignatureImpl> Default for AggregateSignature<C> {
     fn default() -> Self {
         Self::ProofOfPossession(<C as Pairing>::Signature::default())
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Display
-    for AggregateSignature<C>
-{
+impl<C: BlsSignatureImpl> core::fmt::Display for AggregateSignature<C> {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
             Self::Basic(s) => write!(f, "Basic({})", s),
@@ -46,9 +40,7 @@ impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> c
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Debug
-    for AggregateSignature<C>
-{
+impl<C: BlsSignatureImpl> core::fmt::Debug for AggregateSignature<C> {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
             Self::Basic(s) => write!(f, "Basic({:?})", s),
@@ -58,14 +50,9 @@ impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> c
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Copy
-    for AggregateSignature<C>
-{
-}
+impl<C: BlsSignatureImpl> Copy for AggregateSignature<C> {}
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Clone
-    for AggregateSignature<C>
-{
+impl<C: BlsSignatureImpl> Clone for AggregateSignature<C> {
     fn clone(&self) -> Self {
         match self {
             Self::Basic(s) => Self::Basic(*s),
@@ -75,9 +62,7 @@ impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> C
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
-    subtle::ConditionallySelectable for AggregateSignature<C>
-{
+impl<C: BlsSignatureImpl> subtle::ConditionallySelectable for AggregateSignature<C> {
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
         match (a, b) {
             (Self::Basic(a), Self::Basic(b)) => {
@@ -96,9 +81,7 @@ impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
-    TryFrom<&[Signature<C>]> for AggregateSignature<C>
-{
+impl<C: BlsSignatureImpl> TryFrom<&[Signature<C>]> for AggregateSignature<C> {
     type Error = BlsError;
 
     fn try_from(sigs: &[Signature<C>]) -> Result<Self, Self::Error> {
@@ -122,9 +105,7 @@ impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
-    AggregateSignature<C>
-{
+impl<C: BlsSignatureImpl> AggregateSignature<C> {
     /// Accumulate multiple signatures into a single signature
     /// Verify fails if any signed message is a duplicate
     pub fn from_signatures<B: AsRef<[Signature<C>]>>(signatures: B) -> BlsResult<Self> {

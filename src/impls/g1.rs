@@ -3,17 +3,15 @@ use bls12_381_plus::{
     elliptic_curve::{group::Group, hash2curve::ExpandMsgXmd},
     G1Projective, G2Projective, Gt, Scalar,
 };
-use rand::Rng;
-use rand_core::{CryptoRng, RngCore};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// Represents BLS signatures on the BLS12-381 curve where
 /// Signatures are in G1 and Public Keys are in G2 or
 /// i.e. signatures are small and public keys are large
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
-pub struct Bls12381G1;
+pub struct Bls12381G1Impl;
 
-impl HashToPoint for Bls12381G1 {
+impl HashToPoint for Bls12381G1Impl {
     type Output = G1Projective;
 
     fn hash_to_point<B: AsRef<[u8]>, C: AsRef<[u8]>>(m: B, dst: C) -> Self::Output {
@@ -21,7 +19,7 @@ impl HashToPoint for Bls12381G1 {
     }
 }
 
-impl HashToScalar for Bls12381G1 {
+impl HashToScalar for Bls12381G1Impl {
     type Output = Scalar;
 
     fn hash_to_scalar<B: AsRef<[u8]>, C: AsRef<[u8]>>(m: B, dst: C) -> Self::Output {
@@ -29,7 +27,7 @@ impl HashToScalar for Bls12381G1 {
     }
 }
 
-impl Pairing for Bls12381G1 {
+impl Pairing for Bls12381G1Impl {
     type SecretKeyShare = [u8; 33];
     type PublicKey = G2Projective;
     type PublicKeyShare = InnerPointShareG2;
@@ -42,7 +40,7 @@ impl Pairing for Bls12381G1 {
     }
 }
 
-impl BlsSerde for Bls12381G1 {
+impl BlsSerde for Bls12381G1Impl {
     fn serialize_scalar<S: Serializer>(scalar: &Scalar, serializer: S) -> Result<S::Ok, S::Error> {
         scalar.serialize(serializer)
     }
@@ -93,28 +91,28 @@ impl BlsSerde for Bls12381G1 {
     }
 }
 
-impl BlsSignatureCore for Bls12381G1 {}
+impl BlsSignatureCore for Bls12381G1Impl {}
 
-impl BlsSignatureBasic for Bls12381G1 {
+impl BlsSignatureBasic for Bls12381G1Impl {
     const DST: &'static [u8] = b"BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_NUL_";
 }
 
-impl BlsSignatureMessageAugmentation for Bls12381G1 {
+impl BlsSignatureMessageAugmentation for Bls12381G1Impl {
     const DST: &'static [u8] = b"BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_AUG_";
 }
 
-impl BlsSignaturePop for Bls12381G1 {
+impl BlsSignaturePop for Bls12381G1Impl {
     const SIG_DST: &'static [u8] = b"BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_POP_";
     const POP_DST: &'static [u8] = b"BLS_POP_BLS12381G1_XMD:SHA-256_SSWU_RO_POP_";
 }
 
-impl BlsSignatureProof for Bls12381G1 {}
+impl BlsSignatureProof for Bls12381G1Impl {}
 
-impl BlsSignCrypt for Bls12381G1 {}
+impl BlsSignCrypt for Bls12381G1Impl {}
 
-impl BlsTimeCrypt for Bls12381G1 {}
+impl BlsTimeCrypt for Bls12381G1Impl {}
 
-impl BlsElGamal for Bls12381G1 {
+impl BlsElGamal for Bls12381G1Impl {
     const ENC_DST: &'static [u8] = b"BLS_ELGAMAL_BLS12381G2_XMD:SHA-256_SSWU_RO_NUL_";
     type PublicKeyHasher = Bls12381G1Hasher;
 
@@ -123,52 +121,11 @@ impl BlsElGamal for Bls12381G1 {
     }
 }
 
-impl BlsMultiKey for Bls12381G1 {}
+impl BlsMultiKey for Bls12381G1Impl {}
 
-impl BlsMultiSignature for Bls12381G1 {}
+impl BlsMultiSignature for Bls12381G1Impl {}
 
-impl Bls12381G1 {
-    /// Create a new random secret key
-    pub fn new_secret_key() -> SecretKey<Self> {
-        SecretKey::random(get_crypto_rng())
-    }
-
-    /// Compute a secret key from a hash
-    pub fn secret_key_from_hash<B: AsRef<[u8]>>(data: B) -> SecretKey<Self> {
-        SecretKey(<Self as HashToScalar>::hash_to_scalar(
-            data.as_ref(),
-            KEYGEN_SALT,
-        ))
-    }
-
-    /// Compute a secret key from a CS-PRNG
-    pub fn random_secret_key(mut rng: impl RngCore + CryptoRng) -> SecretKey<Self> {
-        SecretKey(<Self as HashToScalar>::hash_to_scalar(
-            rng.gen::<[u8; SECRET_KEY_BYTES]>(),
-            KEYGEN_SALT,
-        ))
-    }
-
-    /// Create a new random commitment challenge for signature proofs of knowledge
-    /// as step 2
-    pub fn new_proof_challenge() -> ProofCommitmentChallenge<Self> {
-        ProofCommitmentChallenge::new()
-    }
-
-    /// Compute a commitment challenge for signature proofs of knowledge from a hash
-    /// as step 2
-    pub fn proof_challenge_from_hash<B: AsRef<[u8]>>(data: B) -> ProofCommitmentChallenge<Self> {
-        ProofCommitmentChallenge::from_hash(data)
-    }
-
-    /// Compute a commitment challenge for signature proofs of knowledge from a CS-PRNG
-    /// as step 2
-    pub fn random_proof_challenge(
-        mut rng: impl RngCore + CryptoRng,
-    ) -> ProofCommitmentChallenge<Self> {
-        ProofCommitmentChallenge::random(&mut rng)
-    }
-}
+impl BlsSignatureImpl for Bls12381G1Impl {}
 
 /// The BLS12381 G1 hash to public key group
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash, Serialize, Deserialize)]

@@ -3,7 +3,7 @@ use subtle::ConditionallySelectable;
 
 /// A BLS signature wrapped in the appropriate scheme used to generate it
 #[derive(PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub enum Signature<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> {
+pub enum Signature<C: BlsSignatureImpl> {
     /// The basic signature scheme
     Basic(
         #[serde(serialize_with = "traits::signature::serialize::<C, _>")]
@@ -24,17 +24,13 @@ pub enum Signature<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsS
     ),
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Default
-    for Signature<C>
-{
+impl<C: BlsSignatureImpl> Default for Signature<C> {
     fn default() -> Self {
         Self::ProofOfPossession(<C as Pairing>::Signature::default())
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Display
-    for Signature<C>
-{
+impl<C: BlsSignatureImpl> core::fmt::Display for Signature<C> {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
             Self::Basic(s) => write!(f, "Basic({})", s),
@@ -44,9 +40,7 @@ impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> c
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Debug
-    for Signature<C>
-{
+impl<C: BlsSignatureImpl> core::fmt::Debug for Signature<C> {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
             Self::Basic(s) => write!(f, "Basic({:?})", s),
@@ -56,14 +50,9 @@ impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> c
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Copy
-    for Signature<C>
-{
-}
+impl<C: BlsSignatureImpl> Copy for Signature<C> {}
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Clone
-    for Signature<C>
-{
+impl<C: BlsSignatureImpl> Clone for Signature<C> {
     fn clone(&self) -> Self {
         match self {
             Self::Basic(s) => Self::Basic(*s),
@@ -73,9 +62,7 @@ impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> C
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
-    ConditionallySelectable for Signature<C>
-{
+impl<C: BlsSignatureImpl> ConditionallySelectable for Signature<C> {
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
         match (a, b) {
             (Self::Basic(a), Self::Basic(b)) => {
@@ -94,7 +81,7 @@ impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Signature<C> {
+impl<C: BlsSignatureImpl> Signature<C> {
     /// Verify the signature using the public key
     pub fn verify<B: AsRef<[u8]>>(&self, pk: &PublicKey<C>, msg: B) -> BlsResult<()> {
         match self {

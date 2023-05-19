@@ -3,53 +3,40 @@ use bls12_381_plus::elliptic_curve::Group;
 
 /// A BLS public key
 #[derive(Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub struct PublicKey<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>(
+pub struct PublicKey<C: BlsSignatureImpl>(
     /// The BLS public key raw value
     #[serde(serialize_with = "traits::public_key::serialize::<C, _>")]
     #[serde(deserialize_with = "traits::public_key::deserialize::<C, _>")]
     pub <C as Pairing>::PublicKey,
 );
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> From<&SecretKey<C>>
-    for PublicKey<C>
-{
+impl<C: BlsSignatureImpl> From<&SecretKey<C>> for PublicKey<C> {
     fn from(s: &SecretKey<C>) -> Self {
         Self(<C as Pairing>::PublicKey::generator() * s.0)
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Display
-    for PublicKey<C>
-{
+impl<C: BlsSignatureImpl> core::fmt::Display for PublicKey<C> {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         write!(f, "{}", self.0)
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> core::fmt::Debug
-    for PublicKey<C>
-{
+impl<C: BlsSignatureImpl> core::fmt::Debug for PublicKey<C> {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         write!(f, "{:?}", self.0)
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Copy
-    for PublicKey<C>
-{
-}
+impl<C: BlsSignatureImpl> Copy for PublicKey<C> {}
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> Clone
-    for PublicKey<C>
-{
+impl<C: BlsSignatureImpl> Clone for PublicKey<C> {
     fn clone(&self) -> Self {
         Self(self.0)
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
-    subtle::ConditionallySelectable for PublicKey<C>
-{
+impl<C: BlsSignatureImpl> subtle::ConditionallySelectable for PublicKey<C> {
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
         Self(<C as Pairing>::PublicKey::conditional_select(
             &a.0, &b.0, choice,
@@ -57,7 +44,7 @@ impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>
     }
 }
 
-impl<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop> PublicKey<C> {
+impl<C: BlsSignatureImpl> PublicKey<C> {
     /// Encrypt a message using signcryption
     pub fn sign_crypt<B: AsRef<[u8]>>(
         &self,

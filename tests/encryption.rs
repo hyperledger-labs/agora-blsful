@@ -4,21 +4,12 @@ use rstest::*;
 use utils::*;
 
 #[rstest]
-#[case::g1(Bls12381G1)]
-#[case::g2(Bls12381G2)]
-fn sign_crypt_works<
-    C: BlsSignatureBasic
-        + BlsSignatureMessageAugmentation
-        + BlsSignaturePop
-        + PartialEq
-        + Eq
-        + std::fmt::Debug,
->(
-    #[case] _c: C,
-) {
+#[case::g1(Bls12381G1Impl)]
+#[case::g2(Bls12381G2Impl)]
+fn sign_crypt_works<C: BlsSignatureImpl + PartialEq + Eq + std::fmt::Debug>(#[case] _c: C) {
     // Repeat test a few times to ensure randomness and fuzz testing
     for _ in 0..25 {
-        let sk = SecretKey::<C>::new();
+        let sk = BlsSignature::<C>::new_secret_key();
         let pk = sk.public_key();
         let ciphertext = pk.sign_crypt(SignatureSchemes::Basic, TEST_MSG);
         assert_eq!(ciphertext.is_valid().unwrap_u8(), 1u8);
@@ -27,7 +18,7 @@ fn sign_crypt_works<
         let plaintext = plaintext.unwrap();
         assert_eq!(plaintext.as_slice(), TEST_MSG);
 
-        let sk2 = SecretKey::<C>::new();
+        let sk2 = BlsSignature::<C>::new_secret_key();
         assert_ne!(sk, sk2);
         let plaintext = ciphertext.decrypt(&sk2);
         // Sometimes this can happen but the ciphertext should still fail
@@ -41,13 +32,9 @@ fn sign_crypt_works<
 }
 
 #[rstest]
-#[case::g1(Bls12381G1)]
-#[case::g2(Bls12381G2)]
-fn sign_crypt_with_shares_works<
-    C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop,
->(
-    #[case] _c: C,
-) {
+#[case::g1(Bls12381G1Impl)]
+#[case::g2(Bls12381G2Impl)]
+fn sign_crypt_with_shares_works<C: BlsSignatureImpl>(#[case] _c: C) {
     let sk = SecretKey::<C>::new();
     let pk = sk.public_key();
     let shares = sk.split(2, 3).unwrap();
@@ -74,11 +61,9 @@ fn sign_crypt_with_shares_works<
 }
 
 #[rstest]
-#[case::g1(Bls12381G1)]
-#[case::g2(Bls12381G2)]
-fn time_lock_works<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>(
-    #[case] _c: C,
-) {
+#[case::g1(Bls12381G1Impl)]
+#[case::g2(Bls12381G2Impl)]
+fn time_lock_works<C: BlsSignatureImpl>(#[case] _c: C) {
     let sk = SecretKey::<C>::new();
     let pk = sk.public_key();
     let ciphertext = pk
@@ -102,13 +87,9 @@ fn time_lock_works<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsS
 }
 
 #[rstest]
-#[case::g1(Bls12381G1)]
-#[case::g2(Bls12381G2)]
-fn elgamal_ciphertext_works<
-    C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop,
->(
-    #[case] _c: C,
-) {
+#[case::g1(Bls12381G1Impl)]
+#[case::g2(Bls12381G2Impl)]
+fn elgamal_ciphertext_works<C: BlsSignatureImpl>(#[case] _c: C) {
     let sk = SecretKey::<C>::new();
     let one = SecretKey::<C>::new();
     let two = SecretKey::<C>::new();
@@ -139,11 +120,9 @@ fn elgamal_ciphertext_works<
 }
 
 #[rstest]
-#[case::g1(Bls12381G1)]
-#[case::g2(Bls12381G2)]
-fn elgamal_proofs_work<C: BlsSignatureBasic + BlsSignatureMessageAugmentation + BlsSignaturePop>(
-    #[case] _c: C,
-) {
+#[case::g1(Bls12381G1Impl)]
+#[case::g2(Bls12381G2Impl)]
+fn elgamal_proofs_work<C: BlsSignatureImpl>(#[case] _c: C) {
     let sk = SecretKey::<C>::new();
     let pk = sk.public_key();
 
