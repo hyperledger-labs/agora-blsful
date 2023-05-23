@@ -15,7 +15,7 @@ license = "MIT OR Apache-2.0"
 name = "blsful"
 readme = "README.md"
 repository = "https://github.com/mikelodder7/blsful"
-version = "2.0.0-rc.2"
+version = "2.0.0"
 
 [features]
 
