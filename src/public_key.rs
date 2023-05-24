@@ -67,11 +67,16 @@ impl<C: BlsSignatureImpl> PublicKey<C> {
         msg: B,
         id: D,
     ) -> BlsResult<TimeCryptCiphertext<C>> {
+        let dst = match scheme {
+            SignatureSchemes::Basic => <C as BlsSignatureBasic>::DST,
+            SignatureSchemes::MessageAugmentation => <C as BlsSignatureMessageAugmentation>::DST,
+            SignatureSchemes::ProofOfPossession => <C as BlsSignaturePop>::SIG_DST,
+        };
         let (u, v, w) = <C as BlsTimeCrypt>::seal(
             self.0,
             msg.as_ref(),
             id.as_ref(),
-            <C as BlsSignatureBasic>::DST,
+            dst,
         )?;
         Ok(TimeCryptCiphertext { u, v, w, scheme })
     }

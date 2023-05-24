@@ -85,7 +85,7 @@ pub trait BlsTimeCrypt:
             let len = uint_zigzag::Uint::try_from(&plaintext[..overhead])
                 .unwrap()
                 .0 as usize;
-            if len < plaintext.len() - overhead {
+            if len <= plaintext.len() - overhead {
                 message = plaintext[overhead..overhead + len].to_vec();
             } else {
                 return CtOption::new(w.to_vec(), 0u8.into());

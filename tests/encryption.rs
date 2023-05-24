@@ -87,6 +87,19 @@ fn time_lock_works<C: BlsSignatureImpl>(#[case] _c: C) {
 }
 
 #[rstest]
+#[case::Basic(SignatureSchemes::Basic)]
+#[case::ProofOfPossession(SignatureSchemes::ProofOfPossession)]
+fn time_lock_all_schemes(#[case] scheme: SignatureSchemes) {
+    let sk = Bls12381G2::new_secret_key();
+    let pk = sk.public_key();
+    let shares = sk.split(2, 3).unwrap();
+    let sig_shares = shares.iter().map(|s| s.sign(scheme, TEST_ID).unwrap()).collect::<Vec<_>>();
+    let ciphertext = pk.encrypt_time_lock(scheme, TEST_MSG, TEST_ID).unwrap();
+    let res = ciphertext.decrypt(&Signature::from_shares(&sig_shares).unwrap());
+    assert_eq!(res.is_some().unwrap_u8(), 1u8);
+}
+
+#[rstest]
 #[case::g1(Bls12381G1Impl)]
 #[case::g2(Bls12381G2Impl)]
 fn elgamal_ciphertext_works<C: BlsSignatureImpl>(#[case] _c: C) {

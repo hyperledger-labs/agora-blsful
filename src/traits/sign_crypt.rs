@@ -96,7 +96,7 @@ pub trait BlsSignCrypt:
             let len = uint_zigzag::Uint::try_from(&plaintext[..overhead])
                 .unwrap()
                 .0 as usize;
-            if len < plaintext.len() - overhead {
+            if len <= plaintext.len() - overhead {
                 return CtOption::new(plaintext[overhead..overhead + len].to_vec(), valid);
             }
         }
