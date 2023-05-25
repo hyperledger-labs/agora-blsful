@@ -15,7 +15,7 @@ license = "MIT OR Apache-2.0"
 name = "blsful"
 readme = "README.md"
 repository = "https://github.com/mikelodder7/blsful"
-version = "2.1.1"
+version = "2.1.2"
 
 [features]
 
@@ -36,7 +36,7 @@ sha3 = { version = "0.10", default-features = false }
 subtle = { version = "2.4", default-features = false }
 thiserror = "1.0"
 uint-zigzag = { version = "0.2", features = ["std"] }
-vsss-rs = { version = "3.1.0", default-features = false, features = ["std"] }
+vsss-rs = { version = "3", default-features = false, features = ["std"] }
 zeroize = { version = "1.6", features = ["zeroize_derive"] }
 
 [dev-dependencies]

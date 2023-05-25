@@ -100,6 +100,31 @@ fn time_lock_all_schemes(#[case] scheme: SignatureSchemes) {
 }
 
 #[rstest]
+#[case::g1_basic(Bls12381G1Impl, SignatureSchemes::Basic)]
+#[case::g1_pop(Bls12381G1Impl, SignatureSchemes::ProofOfPossession)]
+#[case::g2_basic(Bls12381G2Impl, SignatureSchemes::Basic)]
+#[case::g2_pop(Bls12381G2Impl, SignatureSchemes::ProofOfPossession)]
+fn encrypt_bigger_than_32<C: BlsSignatureImpl>(#[case]_c: C, #[case] scheme: SignatureSchemes) {
+    const BIG_MSG: &[u8] = b"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum venenatis convallis nunc, in ullamcorper lectus fringilla in. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Sed posuere in quam ac ultricies. Proin rhoncus nisl eget urna accumsan porttitor. Nulla quis est et sem cursus gravida quis ac enim. Fusce congue tincidunt lobortis. Interdum et malesuada fames ac ante ipsum primis in faucibus. Praesent vel urna nisi. Pellentesque lacinia placerat lacus sed laoreet. Sed ullamcorper, nulla eu cursus varius, ligula metus ornare diam, a ultrices tellus dolor a diam. Phasellus lobortis leo non tincidunt molestie. Aliquam molestie est quis nulla porta pellentesque. Nam rutrum hendrerit lorem. Sed malesuada dolor eu felis pulvinar, in euismod sapien feugiat. Duis consequat mi dictum, faucibus velit quis, egestas felis.";
+    let sk = BlsSignature::<C>::new_secret_key();
+    let pk = sk.public_key();
+    let ciphertext = pk.encrypt_time_lock(scheme, BIG_MSG, TEST_ID);
+    assert!(ciphertext.is_ok());
+    let ciphertext = ciphertext.unwrap();
+    let sig = sk.sign(scheme, TEST_ID).unwrap();
+    let plaintext = ciphertext.decrypt(&sig);
+    assert_eq!(plaintext.is_some().unwrap_u8(), 1u8);
+    let plaintext = plaintext.unwrap();
+    assert_eq!(plaintext.as_slice(), BIG_MSG);
+
+    let ciphertext = pk.sign_crypt(scheme, BIG_MSG);
+    let plaintext = ciphertext.decrypt(&sk);
+    assert_eq!(plaintext.is_some().unwrap_u8(), 1u8);
+    let plaintext = plaintext.unwrap();
+    assert_eq!(plaintext.as_slice(), BIG_MSG);
+}
+
+#[rstest]
 #[case::g1(Bls12381G1Impl)]
 #[case::g2(Bls12381G2Impl)]
 fn elgamal_ciphertext_works<C: BlsSignatureImpl>(#[case] _c: C) {

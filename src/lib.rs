@@ -98,9 +98,27 @@ impl Default for InnerPointShareG1 {
     }
 }
 
+impl core::fmt::LowerHex for InnerPointShareG1 {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        for &b in &self.0 {
+            write!(f, "{:02x}", b)?;
+        }
+        Ok(())
+    }
+}
+
+impl core::fmt::UpperHex for InnerPointShareG1 {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        for &b in &self.0 {
+            write!(f, "{:02X}", b)?;
+        }
+        Ok(())
+    }
+}
+
 impl core::fmt::Display for InnerPointShareG1 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "{}", hex::encode(self.0))
+        write!(f, "{:x}", self)
     }
 }
 
@@ -154,9 +172,27 @@ impl Default for InnerPointShareG2 {
     }
 }
 
+impl core::fmt::LowerHex for InnerPointShareG2 {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        for &b in &self.0 {
+            write!(f, "{:02x}", b)?;
+        }
+        Ok(())
+    }
+}
+
+impl core::fmt::UpperHex for InnerPointShareG2 {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        for &b in &self.0 {
+            write!(f, "{:02X}", b)?;
+        }
+        Ok(())
+    }
+}
+
 impl core::fmt::Display for InnerPointShareG2 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "{}", hex::encode(self.0))
+        write!(f, "{:x}", self)
     }
 }
 

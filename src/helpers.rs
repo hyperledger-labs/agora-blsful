@@ -101,10 +101,8 @@ pub mod fixed_arr {
         {
             if d.is_human_readable() {
                 let hex_str = <&str>::deserialize(d)?;
-                let bytes = hex::decode(hex_str).map_err(de::Error::custom)?;
                 let mut share = [0u8; N];
-                share[0] = bytes[0];
-                share[1..].copy_from_slice(&bytes[1..]);
+                hex::decode_to_slice(hex_str, &mut share).map_err(de::Error::custom)?;
                 return Ok(share);
             }
 
