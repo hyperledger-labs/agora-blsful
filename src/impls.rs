@@ -73,7 +73,7 @@ pub type Bls12381G2 = BlsSignature<Bls12381G2Impl>;
 
 pub(crate) mod inner_types {
     #[cfg(feature = "blst")]
-    pub use blstrs::{*, group::{Curve, Group, GroupEncoding}, ff::{Field, PrimeField}};
+    pub use blstrs_plus::{*, group::{Curve, Group, GroupEncoding}, ff::{Field, PrimeField}, pairing_lib::{MultiMillerLoop, MillerLoopResult}};
     #[cfg(all(feature = "rust", not(feature = "blst")))]
     pub use bls12_381_plus::{*, ff::{Field, PrimeField}, group::{Group, GroupEncoding, Curve}, elliptic_curve::hash2curve::ExpandMsgXmd};
 }

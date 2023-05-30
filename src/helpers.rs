@@ -45,15 +45,7 @@ pub fn pairing_g1_g2(points: &[(G1Projective, G2Projective)]) -> Gt {
         .iter()
         .map(|(p1, p2)| (p1, p2))
         .collect::<Vec<(&G1Affine, &G2Prepared)>>();
-    #[cfg(feature = "blst")]
-    {
-        use blstrs::pairing_lib::{MultiMillerLoop, MillerLoopResult};
-        Bls12::multi_miller_loop(ref_t.as_slice()).final_exponentiation()
-    }
-    #[cfg(all(feature = "bls12_381_plus", not(feature = "blst")))]
-    {
-        multi_miller_loop(ref_t.as_slice()).final_exponentiation()
-    }
+    multi_miller_loop(ref_t.as_slice()).final_exponentiation()
 }
 
 pub fn pairing_g2_g1(points: &[(G2Projective, G1Projective)]) -> Gt {
@@ -65,15 +57,7 @@ pub fn pairing_g2_g1(points: &[(G2Projective, G1Projective)]) -> Gt {
         .iter()
         .map(|(p1, p2)| (p1, p2))
         .collect::<Vec<(&G1Affine, &G2Prepared)>>();
-    #[cfg(feature = "blst")]
-    {
-        use blstrs::pairing_lib::{MultiMillerLoop, MillerLoopResult};
-        Bls12::multi_miller_loop(ref_t.as_slice()).final_exponentiation()
-    }
-    #[cfg(all(feature = "bls12_381_plus", not(feature = "blst")))]
-    {
-        multi_miller_loop(ref_t.as_slice()).final_exponentiation()
-    }
+    multi_miller_loop(ref_t.as_slice()).final_exponentiation()
 }
 
 pub mod fixed_arr {
