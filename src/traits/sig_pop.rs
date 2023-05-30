@@ -1,5 +1,5 @@
 use crate::*;
-use bls12_381_plus::elliptic_curve::{group::GroupEncoding, Group};
+use crate::impls::inner_types::*;
 
 /// BLS signature proof of possession trait
 pub trait BlsSignaturePop: BlsSignatureCore + BlsMultiSignature + BlsMultiKey {

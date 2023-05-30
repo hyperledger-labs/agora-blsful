@@ -1,10 +1,7 @@
 use super::*;
 use crate::helpers::*;
 use crate::BlsResult;
-use bls12_381_plus::{
-    ff::Field,
-    group::{Group, GroupEncoding},
-};
+use crate::impls::inner_types::*;
 use rand::Rng;
 use sha3::{
     digest::{ExtendableOutput, Update, XofReader},

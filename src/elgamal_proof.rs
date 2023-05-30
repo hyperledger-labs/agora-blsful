@@ -1,5 +1,5 @@
 use crate::*;
-use bls12_381_plus::elliptic_curve::Group;
+use crate::impls::inner_types::*;
 
 /// A Discrete Log Proof tied to a specific ElGamal ciphertext
 #[derive(Default, PartialEq, Eq, Serialize, Deserialize)]

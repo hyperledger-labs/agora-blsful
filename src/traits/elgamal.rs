@@ -1,7 +1,6 @@
 use super::*;
 use crate::{BlsError, BlsResult};
-use bls12_381_plus::elliptic_curve::{Field, Group};
-use bls12_381_plus::group::GroupEncoding;
+use crate::impls::inner_types::*;
 use rand_core::{CryptoRng, RngCore};
 
 const SALT: &[u8] = b"ELGAMAL_BLS12381_XOF:HKDF-SHA2-256_";

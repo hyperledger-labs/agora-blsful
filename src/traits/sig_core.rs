@@ -1,5 +1,5 @@
 use crate::*;
-use bls12_381_plus::elliptic_curve::{group::GroupEncoding, Field, Group};
+use crate::impls::inner_types::*;
 use vsss_rs::{combine_shares_group, Share};
 
 /// The core methods used by BLS signatures

@@ -1,8 +1,5 @@
 use crate::*;
-use bls12_381_plus::{
-    elliptic_curve::{group::Group, hash2curve::ExpandMsgXmd},
-    G1Projective, G2Projective, Gt, Scalar,
-};
+use crate::impls::inner_types::*;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// Represents BLS signatures on the BLS12-381 curve where
@@ -14,6 +11,12 @@ pub struct Bls12381G1Impl;
 impl HashToPoint for Bls12381G1Impl {
     type Output = G1Projective;
 
+    #[cfg(feature = "blst")]
+    fn hash_to_point<B: AsRef<[u8]>, C: AsRef<[u8]>>(m: B, dst: C) -> Self::Output {
+        Self::Output::hash_to_curve(m.as_ref(), dst.as_ref(), &[])
+    }
+
+    #[cfg(all(feature = "rust", not(feature = "blst")))]
     fn hash_to_point<B: AsRef<[u8]>, C: AsRef<[u8]>>(m: B, dst: C) -> Self::Output {
         Self::Output::hash::<ExpandMsgXmd<sha2::Sha256>>(m.as_ref(), dst.as_ref())
     }
@@ -42,7 +45,7 @@ impl Pairing for Bls12381G1Impl {
 
 impl BlsSerde for Bls12381G1Impl {
     fn serialize_scalar<S: Serializer>(scalar: &Scalar, serializer: S) -> Result<S::Ok, S::Error> {
-        scalar.serialize(serializer)
+        <Scalar as Serialize>::serialize(scalar, serializer)
     }
 
     fn serialize_scalar_share<S: Serializer>(
@@ -69,7 +72,7 @@ impl BlsSerde for Bls12381G1Impl {
     fn deserialize_scalar<'de, D: Deserializer<'de>>(
         deserializer: D,
     ) -> Result<<Self::PublicKey as Group>::Scalar, D::Error> {
-        Scalar::deserialize(deserializer)
+        <Scalar as Deserialize<'de>>::deserialize(deserializer)
     }
 
     fn deserialize_scalar_share<'de, D: Deserializer<'de>>(
@@ -134,6 +137,12 @@ pub struct Bls12381G1Hasher;
 impl HashToPoint for Bls12381G1Hasher {
     type Output = G2Projective;
 
+    #[cfg(feature = "blst")]
+    fn hash_to_point<B: AsRef<[u8]>, C: AsRef<[u8]>>(m: B, dst: C) -> Self::Output {
+        Self::Output::hash_to_curve(m.as_ref(), dst.as_ref(), &[])
+    }
+
+    #[cfg(all(feature = "rust", not(feature = "blst")))]
     fn hash_to_point<B: AsRef<[u8]>, C: AsRef<[u8]>>(m: B, dst: C) -> Self::Output {
         Self::Output::hash::<ExpandMsgXmd<sha2::Sha256>>(m.as_ref(), dst.as_ref())
     }

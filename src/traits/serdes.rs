@@ -1,5 +1,5 @@
 use crate::traits::Pairing;
-use bls12_381_plus::elliptic_curve::group::Group;
+use crate::impls::inner_types::*;
 use serde::{Deserializer, Serializer};
 
 /// Serialization trait for inner types

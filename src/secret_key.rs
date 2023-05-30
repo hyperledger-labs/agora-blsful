@@ -1,6 +1,5 @@
 use crate::*;
-use bls12_381_plus::elliptic_curve::{Group, PrimeField};
-
+use crate::impls::inner_types::*;
 use crate::helpers::{get_crypto_rng, KEYGEN_SALT};
 use rand::Rng;
 use rand_core::{CryptoRng, RngCore};

@@ -1,5 +1,5 @@
 use crate::*;
-use bls12_381_plus::elliptic_curve::Group;
+use crate::impls::inner_types::*;
 
 /// A BLS public key
 #[derive(Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]

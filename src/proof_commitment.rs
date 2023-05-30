@@ -1,5 +1,5 @@
 use crate::*;
-use bls12_381_plus::elliptic_curve::{Group, PrimeField};
+use crate::impls::inner_types::*;
 use rand::Rng;
 use rand_core::{CryptoRng, RngCore};
 use subtle::CtOption;

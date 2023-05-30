@@ -1,4 +1,4 @@
-use bls12_381_plus::elliptic_curve::ff::PrimeField;
+use crate::impls::inner_types::*;
 use core::fmt::Display;
 
 /// The hash to scalar methods

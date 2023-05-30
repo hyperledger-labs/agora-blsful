@@ -15,14 +15,18 @@ license = "MIT OR Apache-2.0"
 name = "blsful"
 readme = "README.md"
 repository = "https://github.com/mikelodder7/blsful"
-version = "2.1.2"
+version = "2.2.0"
 
 [features]
+default = ["blst"]
+rust = ["bls12_381_plus/alloc"]
+blst = ["blstrs"]
 
 [dependencies]
 anyhow = "1.0"
 arrayref = "0.3"
-bls12_381_plus = "0.8"
+bls12_381_plus =  { version = "0.8", optional = true }
+blstrs = { version = "0.8", git = "https://github.com/mikelodder7/blstrs", optional = true}
 hex = "0.4"
 hkdf = { version = "0.12", default-features = false }
 merlin = "3"

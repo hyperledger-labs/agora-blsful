@@ -13,6 +13,9 @@
     unused_qualifications
 )]
 
+#[cfg(all(not(feature = "rust"), not(feature = "blst")))]
+compile_error!("At least `rust` or `blst` must be selected");
+
 mod helpers;
 
 use helpers::*;
@@ -64,7 +67,6 @@ pub use signature_share::*;
 pub use time_crypt_ciphertext::*;
 pub use traits::*;
 
-pub use bls12_381_plus;
 pub use vsss_rs;
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};

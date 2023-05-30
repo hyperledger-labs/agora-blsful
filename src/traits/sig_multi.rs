@@ -1,5 +1,5 @@
 use crate::*;
-use bls12_381_plus::elliptic_curve::Group;
+use crate::impls::inner_types::*;
 
 /// A trait that defines the BLS schemes that support multi-signatures
 pub trait BlsMultiSignature: BlsSignatureCore {

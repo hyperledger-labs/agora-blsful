@@ -1,4 +1,4 @@
-use bls12_381_plus::elliptic_curve::group::{Group, GroupEncoding};
+use crate::impls::inner_types::*;
 use core::fmt::Display;
 use subtle::ConditionallySelectable;
 

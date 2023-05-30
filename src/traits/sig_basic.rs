@@ -1,5 +1,5 @@
 use crate::*;
-use bls12_381_plus::elliptic_curve::group::Group;
+use crate::impls::inner_types::*;
 use std::collections::HashMap;
 
 /// BLS signature basic trait

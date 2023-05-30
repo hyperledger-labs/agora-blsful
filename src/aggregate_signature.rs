@@ -1,5 +1,5 @@
 use crate::*;
-use bls12_381_plus::elliptic_curve::Group;
+use crate::impls::inner_types::*;
 
 /// Represents a BLS signature for multiple signatures that signed different messages
 #[derive(PartialEq, Eq, serde::Serialize, serde::Deserialize)]
