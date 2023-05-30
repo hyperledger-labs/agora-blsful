@@ -70,10 +70,10 @@ pub type Bls12381G1 = BlsSignature<Bls12381G1Impl>;
 /// A BLS signature implementation using G2 for signatures and G1 for public keys
 pub type Bls12381G2 = BlsSignature<Bls12381G2Impl>;
 
-
-pub(crate) mod inner_types {
+/// The inner representation types
+pub mod inner_types {
     #[cfg(feature = "blst")]
     pub use blstrs_plus::{*, group::{Curve, Group, GroupEncoding}, ff::{Field, PrimeField}, pairing_lib::{MultiMillerLoop, MillerLoopResult}};
     #[cfg(all(feature = "rust", not(feature = "blst")))]
-    pub use bls12_381_plus::{*, ff::{Field, PrimeField}, group::{Group, GroupEncoding, Curve}, elliptic_curve::hash2curve::ExpandMsgXmd};
+    pub use bls12_381_plus::{*, ff::{Field, PrimeField}, group::{Group, GroupEncoding, Curve}, elliptic_curve::hash2curve::{ExpandMsgXmd, ExpandMsgXof}};
 }
