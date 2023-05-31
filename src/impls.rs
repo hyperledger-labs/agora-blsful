@@ -72,7 +72,7 @@ pub type Bls12381G2 = BlsSignature<Bls12381G2Impl>;
 
 /// The inner representation types
 pub mod inner_types {
-    #[cfg(all(feature = "rust", not(feature = "blst")))]
+    #[cfg(not(feature = "blst"))]
     pub use bls12_381_plus::{
         elliptic_curve::hash2curve::{ExpandMsgXmd, ExpandMsgXof},
         ff::{Field, PrimeField},
