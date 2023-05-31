@@ -1,5 +1,5 @@
-use crate::*;
 use crate::impls::inner_types::*;
+use crate::*;
 
 /// A trait that defines the BLS schemes that support multi-signatures
 pub trait BlsMultiSignature: BlsSignatureCore {

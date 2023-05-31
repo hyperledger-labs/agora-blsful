@@ -1,5 +1,5 @@
-use crate::traits::Pairing;
 use crate::impls::inner_types::*;
+use crate::traits::Pairing;
 use serde::{Deserializer, Serializer};
 
 /// Serialization trait for inner types

@@ -1,7 +1,7 @@
 use crate::helpers::*;
+use crate::impls::inner_types::*;
 use crate::traits::{HashToPoint, HashToScalar, Pairing};
 use crate::*;
-use crate::impls::inner_types::*;
 use rand::Rng;
 use sha2::Sha256;
 use sha3::{

@@ -1,7 +1,7 @@
 use super::*;
 use crate::helpers::*;
-use crate::BlsResult;
 use crate::impls::inner_types::*;
+use crate::BlsResult;
 use rand::Rng;
 use sha3::{
     digest::{ExtendableOutput, Update, XofReader},

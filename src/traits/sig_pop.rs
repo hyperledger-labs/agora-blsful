@@ -1,5 +1,5 @@
-use crate::*;
 use crate::impls::inner_types::*;
+use crate::*;
 
 /// BLS signature proof of possession trait
 pub trait BlsSignaturePop: BlsSignatureCore + BlsMultiSignature + BlsMultiKey {

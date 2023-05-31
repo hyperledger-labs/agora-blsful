@@ -1,5 +1,5 @@
-use crate::*;
 use crate::impls::inner_types::*;
+use crate::*;
 use vsss_rs::{combine_shares_group, Share};
 
 /// The core methods used by BLS signatures

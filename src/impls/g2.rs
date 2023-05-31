@@ -1,5 +1,5 @@
-use crate::*;
 use crate::impls::inner_types::*;
+use crate::*;
 
 /// Represents BLS signatures on the BLS12-381 curve where
 /// Signatures are in G2 and Public Keys are in G1 or
@@ -10,12 +10,6 @@ pub struct Bls12381G2Impl;
 impl HashToPoint for Bls12381G2Impl {
     type Output = G2Projective;
 
-    #[cfg(feature = "blst")]
-    fn hash_to_point<B: AsRef<[u8]>, C: AsRef<[u8]>>(m: B, dst: C) -> Self::Output {
-        Self::Output::hash_to_curve(m.as_ref(), dst.as_ref(), &[])
-    }
-
-    #[cfg(all(feature = "rust", not(feature = "blst")))]
     fn hash_to_point<B: AsRef<[u8]>, C: AsRef<[u8]>>(m: B, dst: C) -> Self::Output {
         Self::Output::hash::<ExpandMsgXmd<sha2::Sha256>>(m.as_ref(), dst.as_ref())
     }
@@ -136,12 +130,6 @@ pub struct Bls12381G2Hasher;
 impl HashToPoint for Bls12381G2Hasher {
     type Output = G1Projective;
 
-    #[cfg(feature = "blst")]
-    fn hash_to_point<B: AsRef<[u8]>, C: AsRef<[u8]>>(m: B, dst: C) -> Self::Output {
-        Self::Output::hash_to_curve(m.as_ref(), dst.as_ref(), &[])
-    }
-
-    #[cfg(all(feature = "rust", not(feature = "blst")))]
     fn hash_to_point<B: AsRef<[u8]>, C: AsRef<[u8]>>(m: B, dst: C) -> Self::Output {
         Self::Output::hash::<ExpandMsgXmd<sha2::Sha256>>(m.as_ref(), dst.as_ref())
     }

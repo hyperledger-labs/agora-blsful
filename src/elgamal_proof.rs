@@ -1,5 +1,5 @@
-use crate::*;
 use crate::impls::inner_types::*;
+use crate::*;
 
 /// A Discrete Log Proof tied to a specific ElGamal ciphertext
 #[derive(Default, PartialEq, Eq, Serialize, Deserialize)]

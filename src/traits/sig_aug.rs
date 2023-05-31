@@ -1,5 +1,5 @@
-use crate::*;
 use crate::impls::inner_types::*;
+use crate::*;
 
 /// BLS signature augmentation trait
 pub trait BlsSignatureMessageAugmentation: BlsSignatureCore {

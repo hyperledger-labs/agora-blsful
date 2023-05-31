@@ -1,6 +1,6 @@
 use super::*;
-use crate::{BlsError, BlsResult};
 use crate::impls::inner_types::*;
+use crate::{BlsError, BlsResult};
 use rand_core::{CryptoRng, RngCore};
 
 const SALT: &[u8] = b"ELGAMAL_BLS12381_XOF:HKDF-SHA2-256_";

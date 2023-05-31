@@ -1,5 +1,5 @@
-use crate::*;
 use crate::impls::inner_types::*;
+use crate::*;
 
 /// A BLS public key
 #[derive(Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -72,12 +72,7 @@ impl<C: BlsSignatureImpl> PublicKey<C> {
             SignatureSchemes::MessageAugmentation => <C as BlsSignatureMessageAugmentation>::DST,
             SignatureSchemes::ProofOfPossession => <C as BlsSignaturePop>::SIG_DST,
         };
-        let (u, v, w) = <C as BlsTimeCrypt>::seal(
-            self.0,
-            msg.as_ref(),
-            id.as_ref(),
-            dst,
-        )?;
+        let (u, v, w) = <C as BlsTimeCrypt>::seal(self.0, msg.as_ref(), id.as_ref(), dst)?;
         Ok(TimeCryptCiphertext { u, v, w, scheme })
     }
 

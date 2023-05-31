@@ -1,5 +1,5 @@
-use crate::*;
 use crate::impls::inner_types::*;
+use crate::*;
 use std::collections::HashMap;
 
 /// BLS signature basic trait

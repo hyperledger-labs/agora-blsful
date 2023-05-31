@@ -1,6 +1,6 @@
-use crate::*;
-use crate::impls::inner_types::*;
 use crate::helpers::{get_crypto_rng, KEYGEN_SALT};
+use crate::impls::inner_types::*;
+use crate::*;
 use rand::Rng;
 use rand_core::{CryptoRng, RngCore};
 use subtle::CtOption;

@@ -93,7 +93,10 @@ fn time_lock_all_schemes(#[case] scheme: SignatureSchemes) {
     let sk = Bls12381G2::new_secret_key();
     let pk = sk.public_key();
     let shares = sk.split(2, 3).unwrap();
-    let sig_shares = shares.iter().map(|s| s.sign(scheme, TEST_ID).unwrap()).collect::<Vec<_>>();
+    let sig_shares = shares
+        .iter()
+        .map(|s| s.sign(scheme, TEST_ID).unwrap())
+        .collect::<Vec<_>>();
     let ciphertext = pk.encrypt_time_lock(scheme, TEST_MSG, TEST_ID).unwrap();
     let res = ciphertext.decrypt(&Signature::from_shares(&sig_shares).unwrap());
     assert_eq!(res.is_some().unwrap_u8(), 1u8);
@@ -104,7 +107,7 @@ fn time_lock_all_schemes(#[case] scheme: SignatureSchemes) {
 #[case::g1_pop(Bls12381G1Impl, SignatureSchemes::ProofOfPossession)]
 #[case::g2_basic(Bls12381G2Impl, SignatureSchemes::Basic)]
 #[case::g2_pop(Bls12381G2Impl, SignatureSchemes::ProofOfPossession)]
-fn encrypt_bigger_than_32<C: BlsSignatureImpl>(#[case]_c: C, #[case] scheme: SignatureSchemes) {
+fn encrypt_bigger_than_32<C: BlsSignatureImpl>(#[case] _c: C, #[case] scheme: SignatureSchemes) {
     const BIG_MSG: &[u8] = b"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum venenatis convallis nunc, in ullamcorper lectus fringilla in. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Sed posuere in quam ac ultricies. Proin rhoncus nisl eget urna accumsan porttitor. Nulla quis est et sem cursus gravida quis ac enim. Fusce congue tincidunt lobortis. Interdum et malesuada fames ac ante ipsum primis in faucibus. Praesent vel urna nisi. Pellentesque lacinia placerat lacus sed laoreet. Sed ullamcorper, nulla eu cursus varius, ligula metus ornare diam, a ultrices tellus dolor a diam. Phasellus lobortis leo non tincidunt molestie. Aliquam molestie est quis nulla porta pellentesque. Nam rutrum hendrerit lorem. Sed malesuada dolor eu felis pulvinar, in euismod sapien feugiat. Duis consequat mi dictum, faucibus velit quis, egestas felis.";
     let sk = BlsSignature::<C>::new_secret_key();
     let pk = sk.public_key();
