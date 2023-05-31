@@ -5,6 +5,10 @@ All notable changes to this crate will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v2.3.0 - 2023-06-01
+
+- Update inner dependencies
+
 ## v2.2.0 - 2023-05-30
 
 - Change to use traits instead of concrete types which reduces code duplication
