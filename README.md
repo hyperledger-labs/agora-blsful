@@ -95,6 +95,22 @@ let spok = commitment.complete(x, y, sig).expect("a signature proof of knowledge
 assert_eq!(spok.verify(pk, b"00000000-0000-0000-0000-000000000000", y).unwrap_u8(), 1u8);
 ```
 
+## License
+
+Licensed under either of
+
+ * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+ * MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+at your option.
+
+### Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally
+submitted for inclusion in the work by you, as defined in the Apache-2.0
+license, shall be dual licensed as above, without any additional terms or
+conditions.
+
 # References
 
 1. [IETF Spec](https://datatracker.ietf.org/doc/draft-irtf-cfrg-bls-signature/)
