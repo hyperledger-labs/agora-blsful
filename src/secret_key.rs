@@ -22,13 +22,13 @@ pub struct SecretKey<C: BlsSignatureImpl>(
 
 impl<C: BlsSignatureImpl> From<SecretKey<C>> for [u8; SECRET_KEY_BYTES] {
     fn from(sk: SecretKey<C>) -> [u8; SECRET_KEY_BYTES] {
-        sk.to_bytes()
+        sk.to_be_bytes()
     }
 }
 
 impl<'a, C: BlsSignatureImpl> From<&'a SecretKey<C>> for [u8; SECRET_KEY_BYTES] {
     fn from(sk: &'a SecretKey<C>) -> [u8; SECRET_KEY_BYTES] {
-        sk.to_bytes()
+        sk.to_be_bytes()
     }
 }
 
@@ -54,23 +54,24 @@ impl<C: BlsSignatureImpl> SecretKey<C> {
         ))
     }
 
-    /// Get the byte representation of this key
-    pub fn to_bytes(&self) -> [u8; SECRET_KEY_BYTES] {
-        let mut bytes = self.0.to_repr();
-        let ptr = bytes.as_mut();
-        // Make big endian
-        ptr.reverse();
-        <[u8; SECRET_KEY_BYTES]>::try_from(ptr).unwrap()
+    /// Get the big-endian byte representation of this key
+    pub fn to_be_bytes(&self) -> [u8; SECRET_KEY_BYTES] {
+        scalar_to_be_bytes::<C, SECRET_KEY_BYTES>(self.0)
+    }
+
+    /// Get the little-endian byte representation of this key
+    pub fn to_le_bytes(&self) -> [u8; SECRET_KEY_BYTES] {
+        scalar_to_le_bytes::<C, SECRET_KEY_BYTES>(self.0)
     }
 
     /// Convert a big-endian representation of the secret key.
-    pub fn from_bytes(bytes: &[u8; SECRET_KEY_BYTES]) -> CtOption<Self> {
-        let mut repr =
-            <<<C as Pairing>::PublicKey as Group>::Scalar as PrimeField>::Repr::default();
-        let t = repr.as_mut();
-        t.copy_from_slice(bytes);
-        t.reverse();
-        <<C as Pairing>::PublicKey as Group>::Scalar::from_repr(repr).map(Self)
+    pub fn from_be_bytes(bytes: &[u8; SECRET_KEY_BYTES]) -> CtOption<Self> {
+        scalar_from_be_bytes::<C, SECRET_KEY_BYTES>(bytes).map(Self)
+    }
+
+    /// Convert a little-endian representation of the secret key.
+    pub fn from_le_bytes(bytes: &[u8; SECRET_KEY_BYTES]) -> CtOption<Self> {
+        scalar_from_le_bytes::<C, SECRET_KEY_BYTES>(bytes).map(Self)
     }
 
     /// Secret share this key by creating `limit` shares where `threshold` are required
