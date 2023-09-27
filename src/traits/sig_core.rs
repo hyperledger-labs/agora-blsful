@@ -171,6 +171,7 @@ pub trait BlsSignatureCore:
                 )));
             }
             let a = Self::hash_to_point::<_, _>(msg.as_ref(), dst.as_ref());
+            debug_assert_eq!(a.is_identity().unwrap_u8(), 0u8);
             pairs.push((a, pk));
         }
         pairs.push((sig, -<Self::PublicKey as Group>::generator()));

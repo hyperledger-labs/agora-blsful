@@ -40,10 +40,14 @@ pub trait BlsElGamal: Pairing + HashToScalar<Output = <Self::PublicKey as Group>
 
         // odds of this being zero are 2^-256 so we can ignore checking for zero
         let blinder = blinder.unwrap_or_else(|| <Self::PublicKey as Group>::Scalar::random(rng));
+        debug_assert_eq!(blinder.is_zero().unwrap_u8(), 0u8);
 
         let ek = generator * message;
+        debug_assert_eq!(ek.is_identity().unwrap_u8(), 0u8);
         let c1 = Self::PublicKey::generator() * blinder;
+        debug_assert_eq!(c1.is_identity().unwrap_u8(), 0u8);
         let c2 = pk * blinder + ek;
+        debug_assert_eq!(c2.is_identity().unwrap_u8(), 0u8);
 
         Ok((c1, c2))
     }
@@ -60,9 +64,13 @@ pub trait BlsElGamal: Pairing + HashToScalar<Output = <Self::PublicKey as Group>
                 "Generator or public key is identity point".to_string(),
             ));
         }
+        // odds of this being zero are 2^-256 so we can ignore checking for zero
         let blinder = blinder.unwrap_or_else(|| <Self::PublicKey as Group>::Scalar::random(rng));
+        debug_assert_eq!(blinder.is_zero().unwrap_u8(), 0u8);
         let c1 = Self::PublicKey::generator() * blinder;
+        debug_assert_eq!(c1.is_identity().unwrap_u8(), 0u8);
         let c2 = pk * blinder + message;
+        debug_assert_eq!(c2.is_identity().unwrap_u8(), 0u8);
         Ok((c1, c2))
     }
 
@@ -81,15 +89,27 @@ pub trait BlsElGamal: Pairing + HashToScalar<Output = <Self::PublicKey as Group>
         <Self::PublicKey as Group>::Scalar,
         <Self::PublicKey as Group>::Scalar,
     )> {
+        if pk.is_identity().into() {
+            return Err(BlsError::InvalidInputs(
+                "public key is the identity point".to_string(),
+            ));
+        }
         let generator = generator.unwrap_or_else(|| Self::message_generator());
+        debug_assert_eq!(generator.is_identity().unwrap_u8(), 0u8);
         let b = blinder.unwrap_or_else(|| <Self::PublicKey as Group>::Scalar::random(&mut rng));
+        debug_assert_eq!(b.is_zero().unwrap_u8(), 0u8);
         let r = <Self::PublicKey as Group>::Scalar::random(&mut rng);
+        debug_assert_eq!(r.is_zero().unwrap_u8(), 0u8);
         // c1 = P^b
         // c2 = H^m * P^ab
         let (c1, c2) = Self::seal_scalar(pk, message, Some(generator), Some(b), &mut rng)?;
+        debug_assert_eq!(c1.is_identity().unwrap_u8(), 0u8);
+        debug_assert_eq!(c2.is_identity().unwrap_u8(), 0u8);
         // r1 = P^r
         // r2 = H^b * P^ar
         let (r1, r2) = Self::seal_scalar(pk, b, Some(generator), Some(r), &mut rng)?;
+        debug_assert_eq!(r1.is_identity().unwrap_u8(), 0u8);
+        debug_assert_eq!(r2.is_identity().unwrap_u8(), 0u8);
 
         let mut transcript = merlin::Transcript::new(b"ElGamalProof");
         transcript.append_message(b"dst", SALT);
@@ -106,9 +126,12 @@ pub trait BlsElGamal: Pairing + HashToScalar<Output = <Self::PublicKey as Group>
         let mut challenge = [0u8; 64];
         transcript.challenge_bytes(b"challenge", &mut challenge);
         let challenge = Self::scalar_from_bytes_wide(&challenge);
+        debug_assert_eq!(challenge.is_zero().unwrap_u8(), 0u8);
 
         let message_proof = b + challenge * message;
+        debug_assert_eq!(message_proof.is_zero().unwrap_u8(), 0u8);
         let blinder_proof = r + challenge * b;
+        debug_assert_eq!(blinder_proof.is_zero().unwrap_u8(), 0u8);
         Ok((c1, c2, message_proof, blinder_proof, challenge))
     }
 
@@ -134,6 +157,11 @@ pub trait BlsElGamal: Pairing + HashToScalar<Output = <Self::PublicKey as Group>
         blinder_proof: <Self::PublicKey as Group>::Scalar,
         challenge: <Self::PublicKey as Group>::Scalar,
     ) -> BlsResult<Self::PublicKey> {
+        if sk.is_zero().into() {
+            return Err(BlsError::InvalidInputs(
+                "secret key is zero".to_string(),
+            ));
+        }
         let pk = Self::PublicKey::generator() * sk;
         Self::verify_proof(
             pk,

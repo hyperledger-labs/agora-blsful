@@ -86,6 +86,31 @@ fn time_lock_works<C: BlsSignatureImpl>(#[case] _c: C) {
     assert_eq!(plaintext.is_some().unwrap_u8(), 0u8);
 }
 
+
+#[test]
+fn time_lock_works_g1() {
+    let sk = SecretKey::<Bls12381G1Impl>::new();
+    let pk = sk.public_key();
+    let ciphertext = pk
+        .encrypt_time_lock(SignatureSchemes::Basic, TEST_MSG, TEST_ID)
+        .unwrap();
+    let sig = sk.sign(SignatureSchemes::Basic, TEST_ID).unwrap();
+    let bad_sig = sk.sign(SignatureSchemes::Basic, BAD_MSG).unwrap();
+    let bad_scheme = sk
+        .sign(SignatureSchemes::MessageAugmentation, TEST_ID)
+        .unwrap();
+
+    let plaintext = ciphertext.decrypt(&sig);
+    assert_eq!(plaintext.is_some().unwrap_u8(), 1u8);
+    let plaintext = plaintext.unwrap();
+    assert_eq!(plaintext.as_slice(), TEST_MSG);
+
+    let plaintext = ciphertext.decrypt(&bad_sig);
+    assert_eq!(plaintext.is_some().unwrap_u8(), 0u8);
+    let plaintext = ciphertext.decrypt(&bad_scheme);
+    assert_eq!(plaintext.is_some().unwrap_u8(), 0u8);
+}
+
 #[rstest]
 #[case::Basic(SignatureSchemes::Basic)]
 #[case::ProofOfPossession(SignatureSchemes::ProofOfPossession)]

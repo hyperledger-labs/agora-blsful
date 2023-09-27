@@ -16,9 +16,10 @@ pub trait BlsSignatureProof:
         msg: B,
         dst: D,
     ) -> BlsResult<(Self::Signature, <Self::Signature as Group>::Scalar)> {
-        let x = <Self::Signature as Group>::Scalar::random(get_crypto_rng());
-        if x.is_zero().into() {
-            return Err(BlsError::InvalidInputs("x is zero".to_string()));
+        let mut x = <Self::Signature as Group>::Scalar::random(get_crypto_rng());
+        // Should only happen with negligible probability but just in case
+        while x.is_zero().into() {
+            x = <Self::Signature as Group>::Scalar::random(get_crypto_rng());
         }
         let a = Self::hash_to_point(msg, dst);
         Ok((a * x, x))
@@ -81,11 +82,19 @@ pub trait BlsSignatureProof:
                 "signature is the identity point".to_string(),
             ));
         }
-        let x = <Self::Signature as Group>::Scalar::random(get_crypto_rng());
+        let mut x = <Self::Signature as Group>::Scalar::random(get_crypto_rng());
+        // Should only happen with negligible probability but just in case
+        while x.is_zero().into() {
+            x = <Self::Signature as Group>::Scalar::random(get_crypto_rng());
+        }
         let a = Self::hash_to_point(msg, dst);
+        debug_assert_eq!(a.is_identity().unwrap_u8(), 0u8);
         let u = a * x;
+        debug_assert_eq!(u.is_identity().unwrap_u8(), 0u8);
         let (y, t) = Self::generate_timestamp_based_y(u);
+        debug_assert_eq!(y.is_zero().unwrap_u8(), 0u8);
         let v = sig * (x + y);
+        debug_assert_eq!(v.is_identity().unwrap_u8(), 0u8);
         Ok((u, -v, t))
     }
 
@@ -118,6 +127,7 @@ pub trait BlsSignatureProof:
         }
 
         let a = Self::hash_to_point(msg, dst);
+        debug_assert_eq!(a.is_identity().unwrap_u8(), 0u8);
         if Self::pairing(&[
             (proof, <Self::PublicKey as Group>::generator()),
             (commitment + a * y, pk),
@@ -151,6 +161,7 @@ pub trait BlsSignatureProof:
         }
 
         let y = Self::compute_y(commitment, t);
+        debug_assert_eq!(y.is_zero().unwrap_u8(), 0u8);
         Self::verify(commitment, proof, pk, y, msg, dst)
     }
 }

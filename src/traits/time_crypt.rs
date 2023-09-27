@@ -33,6 +33,7 @@ pub trait BlsTimeCrypt:
 
         // \alpha ← Zq
         let alpha = Self::hash_to_scalar(get_crypto_rng().gen::<[u8; 32]>(), SALT);
+        debug_assert_eq!(alpha.is_zero().unwrap_u8(), 0u8);
         let msg_dst = Sha256::digest(message);
         // r = HZq(\alpha  || M)
         let r_input: Vec<u8> = alpha
@@ -43,14 +44,19 @@ pub trait BlsTimeCrypt:
             .chain(msg_dst.as_slice().iter().copied())
             .collect();
         let r = Self::hash_to_scalar(r_input.as_slice(), SALT);
+        debug_assert_eq!(r.is_zero().unwrap_u8(), 0u8);
 
         // K = e(A^r, HG2(ρ))
         let k_rhs = pk * r;
+        debug_assert_eq!(k_rhs.is_identity().unwrap_u8(), 0u8);
         let k_lhs = Self::hash_to_point(id, dst);
+        debug_assert_eq!(k_lhs.is_identity().unwrap_u8(), 0u8);
         let k = Self::pairing(&[(k_lhs, k_rhs)]);
+        debug_assert_eq!(k.is_identity().unwrap_u8(), 0u8);
 
         // U = P^r
         let u = Self::PublicKey::generator() * r;
+        debug_assert_eq!(u.is_identity().unwrap_u8(), 0u8);
         // V = Hℓ(K) ⊕ \alpha
         let v = Self::compute_v(k, alpha.to_repr().as_ref());
         // W = HℓX(\alpha) ⊕ M
@@ -74,7 +80,7 @@ pub trait BlsTimeCrypt:
         decryption_key: Self::Signature,
         is_valid: Choice,
     ) -> CtOption<Vec<u8>> {
-        let valid_sk = !decryption_key.is_identity();
+        let valid_sk = !decryption_key.is_identity() & !u.is_identity();
 
         let k = Self::pairing(&[(decryption_key, u)]);
         let alpha = Self::compute_v(k, v);
@@ -82,6 +88,9 @@ pub trait BlsTimeCrypt:
 
         let mut message = vec![];
         if let Some(overhead) = uint_zigzag::Uint::peek(plaintext.as_slice()) {
+            // If peek succeeds then try_from will also, so unwrap is okay.
+            // peek returns the amount actually used whereas try_from does not
+            // thus both are used.
             let len = uint_zigzag::Uint::try_from(&plaintext[..overhead])
                 .unwrap()
                 .0 as usize;
@@ -99,6 +108,7 @@ pub trait BlsTimeCrypt:
             .chain(msg_dst.as_slice().iter().copied())
             .collect();
         let r = Self::hash_to_scalar(r_input.as_slice(), SALT);
+        debug_assert_eq!(r.is_zero().unwrap_u8(), 0u8);
         CtOption::new(
             message,
             ((Self::PublicKey::generator() * r) - u).is_identity() & is_valid & valid_sk,
@@ -125,6 +135,7 @@ pub trait BlsTimeCrypt:
 
         let mut w = vec![0u8; msg.len()];
         reader.read(&mut w);
+        debug_assert!(!w.iter().all(|x| *x == 0));
         // W = HℓX(\alpha) ⊕ M
         byte_xor(msg, &w)
     }

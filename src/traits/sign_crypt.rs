@@ -1,7 +1,7 @@
 use super::*;
 use crate::helpers::*;
 use crate::impls::inner_types::*;
-use crate::BlsResult;
+use crate::{BlsError, BlsResult};
 use rand::Rng;
 use sha3::{
     digest::{ExtendableOutput, Update, XofReader},
@@ -29,24 +29,29 @@ pub trait BlsSignCrypt:
 
         // r ← Zq
         let r = Self::hash_to_scalar(get_crypto_rng().gen::<[u8; 32]>(), SALT);
+        debug_assert_eq!(r.is_zero().unwrap_u8(), 0u8);
         // U = P^r
         let u = Self::PublicKey::generator() * r;
+        debug_assert_eq!(u.is_identity().unwrap_u8(), 0u8);
         // V = HℓX(R) ⊕ M
         let overhead = uint_zigzag::Uint::from(message.len());
         let mut overhead_bytes = overhead.to_vec();
         overhead_bytes.extend_from_slice(message);
+        // Always use at least 32 bytes
         while overhead_bytes.len() < 32 {
             overhead_bytes.push(0u8);
         }
         let v = Self::compute_v(pk * r, overhead_bytes.as_slice());
         // W = HG2(U′ || V)^r
         let w = Self::compute_w(u, v.as_slice(), dst) * r;
+        debug_assert_eq!(w.is_identity().unwrap_u8(), 0u8);
         (u, v, w)
     }
 
     /// Check if the ciphertext is valid
     fn valid(u: Self::PublicKey, v: &[u8], w: Self::Signature, dst: &[u8]) -> Choice {
         let w_tick = Self::compute_w(u, v, dst);
+        debug_assert_eq!(w_tick.is_identity().unwrap_u8(), 0u8);
 
         let g = -Self::PublicKey::generator();
         let pair_result = Self::pairing(&[(w, g), (w_tick, u)]);
@@ -79,6 +84,7 @@ pub trait BlsSignCrypt:
         shares: &[Self::PublicKeyShare],
         dst: &[u8],
     ) -> CtOption<Vec<u8>> {
+        // Minimum number of shares is 2, otherwise why use threshold
         if shares.len() < 2 {
             return CtOption::new(vec![], 0u8.into());
         }
@@ -90,6 +96,9 @@ pub trait BlsSignCrypt:
     fn decrypt(v: &[u8], ua: Self::PublicKey, valid: Choice) -> CtOption<Vec<u8>> {
         let plaintext = Self::compute_v(ua, v);
         if let Some(overhead) = uint_zigzag::Uint::peek(plaintext.as_slice()) {
+            // If peek succeeds then try_from will also, so unwrap is okay.
+            // peek returns the amount actually used whereas try_from does not
+            // thus both are used.
             let len = uint_zigzag::Uint::try_from(&plaintext[..overhead])
                 .unwrap()
                 .0 as usize;
@@ -109,6 +118,7 @@ pub trait BlsSignCrypt:
 
         let mut v = vec![0u8; r.len()];
         reader.read(&mut v);
+        debug_assert!(!v.iter().all(|x| *x == 0));
         // V = HℓX(R) ⊕ M
         byte_xor(r, &v)
     }
@@ -129,7 +139,18 @@ pub trait BlsSignCrypt:
         u: Self::PublicKey,
     ) -> BlsResult<Self::SignatureShare> {
         let sk = share.as_field_element::<<Self::PublicKey as Group>::Scalar>()?;
+        if sk.is_zero().into() {
+            return Err(BlsError::InvalidInputs(
+                "share is zero".to_string(),
+            ));
+        }
+        if u.is_identity().into() {
+            return Err(BlsError::InvalidInputs(
+                "invalid ciphertext. Contains an identity point".to_string(),
+            ));
+        }
         let sig = u * sk;
+        debug_assert_eq!(sig.is_identity().unwrap_u8(), 0u8);
         let sig_bytes = sig.to_bytes();
         let mut sig_share =
             <Self as Pairing>::SignatureShare::empty_share_with_capacity(sig_bytes.as_ref().len());
@@ -148,6 +169,9 @@ pub trait BlsSignCrypt:
         dst: &[u8],
     ) -> Choice {
         let hash = -Self::compute_w(u, v, dst);
-        Self::pairing(&[(hash, share), (w, pk)]).is_identity()
+        debug_assert_eq!(hash.is_identity().unwrap_u8(), 0u8);
+
+        !share.is_identity() & !pk.is_identity() &
+            !w.is_identity() & Self::pairing(&[(hash, share), (w, pk)]).is_identity()
     }
 }
