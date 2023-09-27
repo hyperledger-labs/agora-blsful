@@ -54,11 +54,7 @@ impl<C: BlsSignatureImpl> Copy for MultiSignature<C> {}
 
 impl<C: BlsSignatureImpl> Clone for MultiSignature<C> {
     fn clone(&self) -> Self {
-        match self {
-            Self::Basic(s) => Self::Basic(*s),
-            Self::MessageAugmentation(s) => Self::MessageAugmentation(*s),
-            Self::ProofOfPossession(s) => Self::ProofOfPossession(*s),
-        }
+        *self
     }
 }
 

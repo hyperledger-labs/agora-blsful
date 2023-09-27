@@ -32,7 +32,7 @@ impl<C: BlsSignatureImpl> Copy for PublicKey<C> {}
 
 impl<C: BlsSignatureImpl> Clone for PublicKey<C> {
     fn clone(&self) -> Self {
-        Self(self.0)
+        *self
     }
 }
 

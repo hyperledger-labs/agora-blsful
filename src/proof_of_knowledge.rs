@@ -80,11 +80,7 @@ impl<C: BlsSignatureImpl> Copy for ProofOfKnowledge<C> {}
 
 impl<C: BlsSignatureImpl> Clone for ProofOfKnowledge<C> {
     fn clone(&self) -> Self {
-        match self {
-            Self::Basic { u, v } => Self::Basic { u: *u, v: *v },
-            Self::MessageAugmentation { u, v } => Self::MessageAugmentation { u: *u, v: *v },
-            Self::ProofOfPossession { u, v } => Self::ProofOfPossession { u: *u, v: *v },
-        }
+        *self
     }
 }
 
@@ -196,10 +192,7 @@ impl<C: BlsSignatureImpl> Copy for ProofOfKnowledgeTimestamp<C> {}
 
 impl<C: BlsSignatureImpl> Clone for ProofOfKnowledgeTimestamp<C> {
     fn clone(&self) -> Self {
-        Self {
-            proof: self.proof,
-            timestamp: self.timestamp,
-        }
+        *self
     }
 }
 

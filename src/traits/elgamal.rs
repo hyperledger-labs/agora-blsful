@@ -158,9 +158,7 @@ pub trait BlsElGamal: Pairing + HashToScalar<Output = <Self::PublicKey as Group>
         challenge: <Self::PublicKey as Group>::Scalar,
     ) -> BlsResult<Self::PublicKey> {
         if sk.is_zero().into() {
-            return Err(BlsError::InvalidInputs(
-                "secret key is zero".to_string(),
-            ));
+            return Err(BlsError::InvalidInputs("secret key is zero".to_string()));
         }
         let pk = Self::PublicKey::generator() * sk;
         Self::verify_proof(

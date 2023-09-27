@@ -25,7 +25,7 @@ impl<C: BlsSignatureImpl> Copy for MultiPublicKey<C> {}
 
 impl<C: BlsSignatureImpl> Clone for MultiPublicKey<C> {
     fn clone(&self) -> Self {
-        Self(self.0)
+        *self
     }
 }
 

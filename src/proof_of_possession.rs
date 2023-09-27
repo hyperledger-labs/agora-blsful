@@ -32,7 +32,7 @@ impl<C: BlsSignatureImpl> Copy for ProofOfPossession<C> {}
 
 impl<C: BlsSignatureImpl> Clone for ProofOfPossession<C> {
     fn clone(&self) -> Self {
-        Self(self.0)
+        *self
     }
 }
 

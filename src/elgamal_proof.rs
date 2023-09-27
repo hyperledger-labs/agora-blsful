@@ -44,12 +44,7 @@ impl<C: BlsSignatureImpl> Copy for ElGamalProof<C> {}
 
 impl<C: BlsSignatureImpl> Clone for ElGamalProof<C> {
     fn clone(&self) -> Self {
-        Self {
-            ciphertext: self.ciphertext,
-            message_proof: self.message_proof,
-            blinder_proof: self.blinder_proof,
-            challenge: self.challenge,
-        }
+        *self
     }
 }
 

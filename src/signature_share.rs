@@ -41,11 +41,7 @@ impl<C: BlsSignatureImpl> Copy for SignatureShare<C> {}
 
 impl<C: BlsSignatureImpl> Clone for SignatureShare<C> {
     fn clone(&self) -> Self {
-        match self {
-            Self::Basic(s) => Self::Basic(*s),
-            Self::MessageAugmentation(s) => Self::MessageAugmentation(*s),
-            Self::ProofOfPossession(s) => Self::ProofOfPossession(*s),
-        }
+        *self
     }
 }
 

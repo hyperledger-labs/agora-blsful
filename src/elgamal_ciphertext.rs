@@ -34,10 +34,7 @@ impl<C: BlsSignatureImpl> Copy for ElGamalCiphertext<C> {}
 
 impl<C: BlsSignatureImpl> Clone for ElGamalCiphertext<C> {
     fn clone(&self) -> Self {
-        Self {
-            c1: self.c1,
-            c2: self.c2,
-        }
+        *self
     }
 }
 

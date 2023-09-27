@@ -54,11 +54,7 @@ impl<C: BlsSignatureImpl> Copy for Signature<C> {}
 
 impl<C: BlsSignatureImpl> Clone for Signature<C> {
     fn clone(&self) -> Self {
-        match self {
-            Self::Basic(s) => Self::Basic(*s),
-            Self::MessageAugmentation(s) => Self::MessageAugmentation(*s),
-            Self::ProofOfPossession(s) => Self::ProofOfPossession(*s),
-        }
+        *self
     }
 }
 

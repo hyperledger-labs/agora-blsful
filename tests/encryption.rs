@@ -86,7 +86,6 @@ fn time_lock_works<C: BlsSignatureImpl>(#[case] _c: C) {
     assert_eq!(plaintext.is_some().unwrap_u8(), 0u8);
 }
 
-
 #[test]
 fn time_lock_works_g1() {
     let sk = SecretKey::<Bls12381G1Impl>::new();

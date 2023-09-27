@@ -1,8 +1,8 @@
 use crate::impls::inner_types::*;
+use crate::{BlsSignatureImpl, Pairing};
 use rand_chacha::ChaCha20Rng;
 use rand_core::SeedableRng;
 use subtle::CtOption;
-use crate::{BlsSignatureImpl, Pairing};
 
 pub const KEYGEN_SALT: &[u8] = b"BLS-SIG-KEYGEN-SALT-";
 
@@ -62,7 +62,9 @@ pub fn pairing_g2_g1(points: &[(G2Projective, G1Projective)]) -> Gt {
     multi_miller_loop(ref_t.as_slice()).final_exponentiation()
 }
 
-pub fn scalar_to_be_bytes<C: BlsSignatureImpl, const N: usize>(s: <<C as Pairing>::PublicKey as Group>::Scalar) -> [u8; N] {
+pub fn scalar_to_be_bytes<C: BlsSignatureImpl, const N: usize>(
+    s: <<C as Pairing>::PublicKey as Group>::Scalar,
+) -> [u8; N] {
     let mut bytes = s.to_repr();
     let ptr = bytes.as_mut();
     // Make big endian
@@ -70,24 +72,28 @@ pub fn scalar_to_be_bytes<C: BlsSignatureImpl, const N: usize>(s: <<C as Pairing
     <[u8; N]>::try_from(ptr).unwrap()
 }
 
-pub fn scalar_to_le_bytes<C: BlsSignatureImpl, const N: usize>(s: <<C as Pairing>::PublicKey as Group>::Scalar) -> [u8; N] {
+pub fn scalar_to_le_bytes<C: BlsSignatureImpl, const N: usize>(
+    s: <<C as Pairing>::PublicKey as Group>::Scalar,
+) -> [u8; N] {
     let mut bytes = s.to_repr();
     let ptr = bytes.as_mut();
     <[u8; N]>::try_from(ptr).unwrap()
 }
 
-pub fn scalar_from_be_bytes<C: BlsSignatureImpl, const N: usize>(input: &[u8; N]) -> CtOption<<<C as Pairing>::PublicKey as Group>::Scalar> {
-    let mut repr =
-        <<<C as Pairing>::PublicKey as Group>::Scalar as PrimeField>::Repr::default();
+pub fn scalar_from_be_bytes<C: BlsSignatureImpl, const N: usize>(
+    input: &[u8; N],
+) -> CtOption<<<C as Pairing>::PublicKey as Group>::Scalar> {
+    let mut repr = <<<C as Pairing>::PublicKey as Group>::Scalar as PrimeField>::Repr::default();
     let t = repr.as_mut();
     t.copy_from_slice(input);
     t.reverse();
     <<C as Pairing>::PublicKey as Group>::Scalar::from_repr(repr)
 }
 
-pub fn scalar_from_le_bytes<C: BlsSignatureImpl, const N: usize>(input: &[u8; N]) -> CtOption<<<C as Pairing>::PublicKey as Group>::Scalar> {
-    let mut repr =
-        <<<C as Pairing>::PublicKey as Group>::Scalar as PrimeField>::Repr::default();
+pub fn scalar_from_le_bytes<C: BlsSignatureImpl, const N: usize>(
+    input: &[u8; N],
+) -> CtOption<<<C as Pairing>::PublicKey as Group>::Scalar> {
+    let mut repr = <<<C as Pairing>::PublicKey as Group>::Scalar as PrimeField>::Repr::default();
     let t = repr.as_mut();
     t.copy_from_slice(input);
     <<C as Pairing>::PublicKey as Group>::Scalar::from_repr(repr)
@@ -103,17 +109,17 @@ pub mod fixed_arr {
 
     pub trait BigArray<'de>: Sized {
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-            where
-                S: Serializer;
+        where
+            S: Serializer;
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-            where
-                D: Deserializer<'de>;
+        where
+            D: Deserializer<'de>;
     }
 
     impl<'de, const N: usize> BigArray<'de> for [u8; N] {
         fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
-            where
-                S: Serializer,
+        where
+            S: Serializer,
         {
             if s.is_human_readable() {
                 hex::encode(self).serialize(s)
@@ -127,8 +133,8 @@ pub mod fixed_arr {
         }
 
         fn deserialize<D>(d: D) -> Result<Self, D::Error>
-            where
-                D: Deserializer<'de>,
+        where
+            D: Deserializer<'de>,
         {
             if d.is_human_readable() {
                 let hex_str = <&str>::deserialize(d)?;
@@ -147,8 +153,8 @@ pub mod fixed_arr {
                 }
 
                 fn visit_seq<A>(self, mut seq: A) -> Result<[u8; N], A::Error>
-                    where
-                        A: SeqAccess<'de>,
+                where
+                    A: SeqAccess<'de>,
                 {
                     let mut arr = [0u8; N];
                     for (i, b) in arr.iter_mut().enumerate() {

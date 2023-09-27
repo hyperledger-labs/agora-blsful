@@ -140,9 +140,7 @@ pub trait BlsSignCrypt:
     ) -> BlsResult<Self::SignatureShare> {
         let sk = share.as_field_element::<<Self::PublicKey as Group>::Scalar>()?;
         if sk.is_zero().into() {
-            return Err(BlsError::InvalidInputs(
-                "share is zero".to_string(),
-            ));
+            return Err(BlsError::InvalidInputs("share is zero".to_string()));
         }
         if u.is_identity().into() {
             return Err(BlsError::InvalidInputs(
@@ -171,7 +169,9 @@ pub trait BlsSignCrypt:
         let hash = -Self::compute_w(u, v, dst);
         debug_assert_eq!(hash.is_identity().unwrap_u8(), 0u8);
 
-        !share.is_identity() & !pk.is_identity() &
-            !w.is_identity() & Self::pairing(&[(hash, share), (w, pk)]).is_identity()
+        !share.is_identity()
+            & !pk.is_identity()
+            & !w.is_identity()
+            & Self::pairing(&[(hash, share), (w, pk)]).is_identity()
     }
 }
