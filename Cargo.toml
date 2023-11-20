@@ -15,7 +15,7 @@ license = "MIT OR Apache-2.0"
 name = "blsful"
 readme = "README.md"
 repository = "https://github.com/mikelodder7/blsful"
-version = "2.4.1"
+version = "2.4.2"
 
 [features]
 default = ["blst"]
@@ -37,7 +37,7 @@ rand_chacha = "0.3"
 serde = { version = "1.0", default-features = false, features = ["derive"] }
 sha2 = { version = "0.10", default-features = false }
 sha3 = { version = "0.10", default-features = false }
-subtle = { version = "2.4", default-features = false }
+subtle = { version = "2.5", default-features = false }
 thiserror = "1.0"
 uint-zigzag = { version = "0.2", features = ["std"] }
 vsss-rs = { version = "3", default-features = false, features = ["std"] }
