@@ -2,7 +2,7 @@ use crate::impls::inner_types::*;
 use crate::{BlsSignatureImpl, Pairing};
 use rand_chacha::ChaCha20Rng;
 use rand_core::SeedableRng;
-use subtle::CtOption;
+use subtle::{Choice, CtOption};
 
 pub const KEYGEN_SALT: &[u8] = b"BLS-SIG-KEYGEN-SALT-";
 
@@ -83,6 +83,12 @@ pub fn scalar_to_le_bytes<C: BlsSignatureImpl, const N: usize>(
 pub fn scalar_from_be_bytes<C: BlsSignatureImpl, const N: usize>(
     input: &[u8; N],
 ) -> CtOption<<<C as Pairing>::PublicKey as Group>::Scalar> {
+    if input.is_zero().into() {
+        return CtOption::new(
+            <<C as Pairing>::PublicKey as Group>::Scalar::ZERO,
+            Choice::from(0u8),
+        );
+    }
     let mut repr = <<<C as Pairing>::PublicKey as Group>::Scalar as PrimeField>::Repr::default();
     let t = repr.as_mut();
     t.copy_from_slice(input);
@@ -93,6 +99,12 @@ pub fn scalar_from_be_bytes<C: BlsSignatureImpl, const N: usize>(
 pub fn scalar_from_le_bytes<C: BlsSignatureImpl, const N: usize>(
     input: &[u8; N],
 ) -> CtOption<<<C as Pairing>::PublicKey as Group>::Scalar> {
+    if input.is_zero().into() {
+        return CtOption::new(
+            <<C as Pairing>::PublicKey as Group>::Scalar::ZERO,
+            Choice::from(0u8),
+        );
+    }
     let mut repr = <<<C as Pairing>::PublicKey as Group>::Scalar as PrimeField>::Repr::default();
     let t = repr.as_mut();
     t.copy_from_slice(input);
@@ -168,5 +180,20 @@ pub mod fixed_arr {
 
             d.deserialize_tuple(N, ArrayVisitor)
         }
+    }
+}
+
+pub trait IsZero {
+    fn is_zero(&self) -> Choice;
+}
+
+impl IsZero for [u8] {
+    fn is_zero(&self) -> Choice {
+        let mut t: i8 = 0;
+        for b in self {
+            t |= *b as i8;
+        }
+
+        Choice::from((((t | -t) >> 7) + 1) as u8)
     }
 }

@@ -81,6 +81,9 @@ impl<C: BlsSignatureImpl> TryFrom<&[Signature<C>]> for AggregateSignature<C> {
     type Error = BlsError;
 
     fn try_from(sigs: &[Signature<C>]) -> Result<Self, Self::Error> {
+        if sigs.len() < 2 {
+            return Err(BlsError::InvalidSignature);
+        }
         let mut g = <C as Pairing>::Signature::identity();
         for s in &sigs[1..] {
             if !s.same_scheme(&sigs[0]) {

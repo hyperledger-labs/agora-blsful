@@ -40,7 +40,7 @@ it's still allows for signature compression.
 From random entropy source
 
 ```rust
-let sk = SecretKey::random(rand_core::OsRng);
+let sk = SecretKey::<Bls12381G1Impl>::random(rand_core::OsRng);
 let pk = PublicKey::from(&sk);
 let pop = ProofOfPossession::new(&sk).expect("a proof of possession");
 assert_eq!(pop.verify(pk).unwrap_u8(), 1u8);
@@ -49,7 +49,7 @@ assert_eq!(pop.verify(pk).unwrap_u8(), 1u8);
 From seed
 
 ```rust
-let sk = SecretKey::hash(b"seed phrase");
+let sk = SecretKey::<Bls12381G1Impl>::hash(b"seed phrase");
 let pk = PublicKey::from(&sk);
 ```
 
@@ -62,7 +62,7 @@ let shares = sk.split::<rand_core::OsRng, 3, 5>(rand_core::OsRng);
 Restore a key from shares
 
 ```rust
-let sk = SecretKey::combine::<3, 5>(&shares);
+let sk = SecretKey::<Bls12381G1Impl>::combine::<3, 5>(&shares);
 ```
 
 ## Signature operations
@@ -75,24 +75,6 @@ let sig = Signature::new(&sk, b"00000000-0000-0000-0000-000000000000").expect("a
 Verify a signature
 ```rust
 assert_eq!(sig.verify(pk, b"00000000-0000-0000-0000-000000000000").unwrap_u8(), 1u8);
-```
-
-Create a proof of knowledge
-
-```rust
-use crate::elliptic_curve::ff::Field;
-
-let x = crate::bls12_381_plus::Scalar::random(rand_core::OsRng);
-let spok = sig.proof_of_knowledge_with_timestamp(b"00000000-0000-0000-0000-000000000000", x, y).expect("a signature proof of knowledge");
-// Send msg and spok to verifier
-assert_eq!(spok.verify(pk, b"00000000-0000-0000-0000-000000000000", y).unwrap_u8(), 1u8);
-
-// or do the three step process
-let commitment = sig.proof_of_knowledge_commitment(b"00000000-0000-0000-0000-000000000000", x).expect("a proof of knowledge commitment");
-// send commitment to the verifier and receive a challenge
-let spok = commitment.complete(x, y, sig).expect("a signature proof of knowledge");
-// Send msg and spok to verifier
-assert_eq!(spok.verify(pk, b"00000000-0000-0000-0000-000000000000", y).unwrap_u8(), 1u8);
 ```
 
 ## License
