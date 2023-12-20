@@ -1,3 +1,4 @@
+use crate::inner_types::*;
 use crate::*;
 use subtle::ConditionallySelectable;
 
@@ -77,6 +78,58 @@ impl<C: BlsSignatureImpl> ConditionallySelectable for Signature<C> {
     }
 }
 
+impl<C: BlsSignatureImpl> From<Signature<C>> for Vec<u8> {
+    fn from(value: Signature<C>) -> Self {
+        Vec::from(&value)
+    }
+}
+
+impl<C: BlsSignatureImpl> From<&Signature<C>> for Vec<u8> {
+    fn from(value: &Signature<C>) -> Self {
+        serde_bare::to_vec(value).unwrap()
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<Vec<u8>> for Signature<C> {
+    type Error = BlsError;
+
+    fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
+        Self::try_from(&value)
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&Vec<u8>> for Signature<C> {
+    type Error = BlsError;
+
+    fn try_from(value: &Vec<u8>) -> Result<Self, Self::Error> {
+        Self::try_from(value.as_slice())
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&[u8]> for Signature<C> {
+    type Error = BlsError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        let len = C::Signature::default().to_bytes().as_ref().len() + 1;
+        if value.len() != len {
+            return Err(BlsError::InvalidInputs(format!(
+                "Invalid length, expected {}, got {}",
+                len,
+                value.len()
+            )));
+        }
+        serde_bare::from_slice(value).map_err(|e| BlsError::InvalidInputs(e.to_string()))
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<Box<[u8]>> for Signature<C> {
+    type Error = BlsError;
+
+    fn try_from(value: Box<[u8]>) -> Result<Self, Self::Error> {
+        Self::try_from(value.as_ref())
+    }
+}
+
 impl<C: BlsSignatureImpl> Signature<C> {
     /// Verify the signature using the public key
     pub fn verify<B: AsRef<[u8]>>(&self, pk: &PublicKey<C>, msg: B) -> BlsResult<()> {
@@ -123,5 +176,48 @@ impl<C: BlsSignatureImpl> Signature<C> {
             Self::MessageAugmentation(s) => s,
             Self::ProofOfPossession(s) => s,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rstest::*;
+
+    #[rstest]
+    #[case::g1(Bls12381G1Impl, 49)]
+    #[case::g2(Bls12381G2Impl, 97)]
+    fn try_from<C: BlsSignatureImpl + PartialEq + Eq + std::fmt::Debug>(
+        #[case] _c: C,
+        #[case] expected_len: usize,
+    ) {
+        const TEST_MSG: &[u8] = b"test_try_from";
+
+        let sk = SecretKey::<C>::from_hash(TEST_MSG);
+        let sig_b = sk.sign(SignatureSchemes::Basic, TEST_MSG).unwrap();
+        let sig_ma = sk
+            .sign(SignatureSchemes::MessageAugmentation, TEST_MSG)
+            .unwrap();
+        let sig_pop = sk
+            .sign(SignatureSchemes::ProofOfPossession, TEST_MSG)
+            .unwrap();
+
+        let test: Vec<u8> = sig_b.into();
+        assert_eq!(test.len(), expected_len);
+        let res_sig_b2 = Signature::<C>::try_from(test);
+        assert!(res_sig_b2.is_ok());
+        assert_eq!(sig_b, res_sig_b2.unwrap());
+
+        let test: Vec<u8> = sig_ma.into();
+        assert_eq!(test.len(), expected_len);
+        let res_sig_ma2 = Signature::<C>::try_from(test);
+        assert!(res_sig_ma2.is_ok());
+        assert_eq!(sig_ma, res_sig_ma2.unwrap());
+
+        let test: Vec<u8> = sig_pop.into();
+        assert_eq!(test.len(), expected_len);
+        let res_sig_pop2 = Signature::<C>::try_from(test);
+        assert!(res_sig_pop2.is_ok());
+        assert_eq!(sig_pop, res_sig_pop2.unwrap());
     }
 }
