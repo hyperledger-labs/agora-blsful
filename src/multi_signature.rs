@@ -106,6 +106,50 @@ impl<C: BlsSignatureImpl> TryFrom<&[Signature<C>]> for MultiSignature<C> {
     }
 }
 
+impl<C: BlsSignatureImpl> From<MultiSignature<C>> for Vec<u8> {
+    fn from(sig: MultiSignature<C>) -> Self {
+        Self::from(&sig)
+    }
+}
+
+impl<C: BlsSignatureImpl> From<&MultiSignature<C>> for Vec<u8> {
+    fn from(value: &MultiSignature<C>) -> Self {
+        serde_bare::to_vec(value).unwrap()
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<Vec<u8>> for MultiSignature<C> {
+    type Error = BlsError;
+
+    fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
+        Self::try_from(&value)
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&Vec<u8>> for MultiSignature<C> {
+    type Error = BlsError;
+
+    fn try_from(value: &Vec<u8>) -> Result<Self, Self::Error> {
+        Self::try_from(value.as_slice())
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&[u8]> for MultiSignature<C> {
+    type Error = BlsError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        serde_bare::from_slice(value).map_err(|_| BlsError::InvalidSignature)
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<Box<[u8]>> for MultiSignature<C> {
+    type Error = BlsError;
+
+    fn try_from(value: Box<[u8]>) -> Result<Self, Self::Error> {
+        Self::try_from(value.as_ref())
+    }
+}
+
 impl<C: BlsSignatureImpl> MultiSignature<C> {
     /// Verify the multi-signature using the multi-public key
     pub fn verify<B: AsRef<[u8]>>(&self, pk: MultiPublicKey<C>, msg: B) -> BlsResult<()> {

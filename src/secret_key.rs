@@ -32,6 +32,53 @@ impl<'a, C: BlsSignatureImpl> From<&'a SecretKey<C>> for [u8; SECRET_KEY_BYTES] 
     }
 }
 
+impl<C: BlsSignatureImpl> From<SecretKey<C>> for Vec<u8> {
+    fn from(value: SecretKey<C>) -> Self {
+        Self::from(&value)
+    }
+}
+
+impl<C: BlsSignatureImpl> From<&SecretKey<C>> for Vec<u8> {
+    fn from(value: &SecretKey<C>) -> Self {
+        value.to_be_bytes().to_vec()
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<Vec<u8>> for SecretKey<C> {
+    type Error = BlsError;
+
+    fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
+        Self::try_from(&value)
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&Vec<u8>> for SecretKey<C> {
+    type Error = BlsError;
+
+    fn try_from(value: &Vec<u8>) -> Result<Self, Self::Error> {
+        Self::try_from(value.as_slice())
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&[u8]> for SecretKey<C> {
+    type Error = BlsError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        let bytes = <[u8; 32]>::try_from(value)
+            .map_err(|_| BlsError::InvalidInputs("Invalid secret key bytes".to_string()))?;
+        Option::from(Self::from_be_bytes(&bytes))
+            .ok_or_else(|| BlsError::InvalidInputs("Invalid secret key bytes".to_string()))
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<Box<[u8]>> for SecretKey<C> {
+    type Error = BlsError;
+
+    fn try_from(value: Box<[u8]>) -> Result<Self, Self::Error> {
+        Self::try_from(value.as_ref())
+    }
+}
+
 impl<C: BlsSignatureImpl> SecretKey<C> {
     /// Create a new random secret key
     pub fn new() -> Self {

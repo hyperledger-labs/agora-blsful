@@ -1,3 +1,4 @@
+use crate::impls::inner_types::*;
 use crate::*;
 
 /// An accumulated public key
@@ -40,6 +41,64 @@ impl<C: BlsSignatureImpl> subtle::ConditionallySelectable for MultiPublicKey<C> 
 impl<C: BlsSignatureImpl> From<&[PublicKey<C>]> for MultiPublicKey<C> {
     fn from(keys: &[PublicKey<C>]) -> Self {
         Self::from_public_keys(keys)
+    }
+}
+
+impl<C: BlsSignatureImpl> From<MultiPublicKey<C>> for Vec<u8> {
+    fn from(pk: MultiPublicKey<C>) -> Self {
+        Self::from(&pk)
+    }
+}
+
+impl<C: BlsSignatureImpl> From<&MultiPublicKey<C>> for Vec<u8> {
+    fn from(pk: &MultiPublicKey<C>) -> Self {
+        pk.0.to_bytes().as_ref().to_vec()
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<Vec<u8>> for MultiPublicKey<C> {
+    type Error = BlsError;
+
+    fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
+        Self::try_from(&value)
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&Vec<u8>> for MultiPublicKey<C> {
+    type Error = BlsError;
+
+    fn try_from(value: &Vec<u8>) -> Result<Self, Self::Error> {
+        Self::try_from(value.as_slice())
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&[u8]> for MultiPublicKey<C> {
+    type Error = BlsError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        let mut repr = C::PublicKey::default().to_bytes();
+        let len = repr.as_ref().len();
+
+        if len != value.len() {
+            return Err(BlsError::InvalidInputs(format!(
+                "Invalid length, expected {}, got {}",
+                len,
+                value.len()
+            )));
+        }
+
+        repr.as_mut().copy_from_slice(value);
+        let key: Option<C::PublicKey> = C::PublicKey::from_bytes(&repr).into();
+        key.map(Self)
+            .ok_or_else(|| BlsError::InvalidInputs("Invalid byte sequence".to_string()))
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<Box<[u8]>> for MultiPublicKey<C> {
+    type Error = BlsError;
+
+    fn try_from(value: Box<[u8]>) -> Result<Self, Self::Error> {
+        Self::try_from(value.as_ref())
     }
 }
 
