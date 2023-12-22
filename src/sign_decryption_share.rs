@@ -21,6 +21,21 @@ impl<C: BlsSignatureImpl> core::fmt::Debug for SignDecryptionShare<C> {
     }
 }
 
+impl<C: BlsSignatureImpl> From<&SignDecryptionShare<C>> for Vec<u8> {
+    fn from(share: &SignDecryptionShare<C>) -> Vec<u8> {
+        serde_bare::to_vec(&share.0).unwrap()
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&[u8]> for SignDecryptionShare<C> {
+    type Error = BlsError;
+    fn try_from(bytes: &[u8]) -> BlsResult<Self> {
+        serde_bare::from_slice(bytes)
+            .map(Self)
+            .map_err(|_| BlsError::InvalidInputs("invalid byte sequence".to_string()))
+    }
+}
+
 impl<C: BlsSignatureImpl> SignDecryptionShare<C> {
     /// Verify the signcrypt decryption share with the corresponding public key and ciphertext
     pub fn verify(&self, pks: &PublicKeyShare<C>, sig: &SignCryptCiphertext<C>) -> BlsResult<()> {

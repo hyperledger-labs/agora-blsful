@@ -1,3 +1,4 @@
+use crate::inner_types::*;
 use crate::*;
 use subtle::{Choice, ConditionallySelectable};
 
@@ -41,6 +42,36 @@ impl<C: BlsSignatureImpl> ConditionallySelectable for ProofOfPossession<C> {
         Self(<C as Pairing>::Signature::conditional_select(
             &a.0, &b.0, choice,
         ))
+    }
+}
+
+impl_from_derivatives!(ProofOfPossession);
+
+impl<C: BlsSignatureImpl> From<&ProofOfPossession<C>> for Vec<u8> {
+    fn from(value: &ProofOfPossession<C>) -> Self {
+        value.0.to_bytes().as_ref().to_vec()
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&[u8]> for ProofOfPossession<C> {
+    type Error = BlsError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        let mut repr = C::Signature::default().to_bytes();
+        let len = repr.as_ref().len();
+
+        if len != value.len() {
+            return Err(BlsError::InvalidInputs(format!(
+                "Invalid length, expected {}, got {}",
+                len,
+                value.len()
+            )));
+        }
+
+        repr.as_mut().copy_from_slice(value);
+        let key: Option<C::Signature> = C::Signature::from_bytes(&repr).into();
+        key.map(Self)
+            .ok_or_else(|| BlsError::InvalidInputs("Invalid byte sequence".to_string()))
     }
 }
 

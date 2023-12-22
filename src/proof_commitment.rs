@@ -83,6 +83,30 @@ impl<C: BlsSignatureImpl> subtle::ConditionallySelectable for ProofCommitment<C>
     }
 }
 
+impl_from_derivatives!(ProofCommitment);
+
+impl<C: BlsSignatureImpl> From<&ProofCommitment<C>> for Vec<u8> {
+    fn from(value: &ProofCommitment<C>) -> Self {
+        serde_bare::to_vec(value).unwrap()
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&[u8]> for ProofCommitment<C> {
+    type Error = BlsError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        let len = C::Signature::default().to_bytes().as_ref().len() + 1;
+        if value.len() != len {
+            return Err(BlsError::InvalidInputs(format!(
+                "Invalid length, expected {}, got {}",
+                len,
+                value.len()
+            )));
+        }
+        serde_bare::from_slice(value).map_err(|e| BlsError::InvalidInputs(e.to_string()))
+    }
+}
+
 impl<C: BlsSignatureImpl> ProofCommitment<C> {
     /// Generate a new proof of knowledge commitment
     /// This is step 1 in the 3 step process
@@ -150,6 +174,26 @@ pub struct ProofCommitmentSecret<C: BlsSignatureImpl>(
     pub <<C as Pairing>::PublicKey as Group>::Scalar,
 );
 
+impl_from_derivatives!(ProofCommitmentSecret);
+
+impl<C: BlsSignatureImpl> From<&ProofCommitmentSecret<C>> for Vec<u8> {
+    fn from(value: &ProofCommitmentSecret<C>) -> Self {
+        scalar_to_be_bytes::<C, SECRET_KEY_BYTES>(value.0).to_vec()
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&[u8]> for ProofCommitmentSecret<C> {
+    type Error = BlsError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        let bytes = <[u8; 32]>::try_from(value)
+            .map_err(|_| BlsError::InvalidInputs("Invalid secret key bytes".to_string()))?;
+        let value = scalar_from_be_bytes::<C, SECRET_KEY_BYTES>(&bytes).map(Self);
+        Option::from(value)
+            .ok_or_else(|| BlsError::InvalidInputs("Invalid secret key bytes".to_string()))
+    }
+}
+
 impl<C: BlsSignatureImpl> ProofCommitmentSecret<C> {
     /// Get the big-endian byte representation of this key
     pub fn to_be_bytes(&self) -> [u8; SECRET_KEY_BYTES] {
@@ -181,6 +225,26 @@ pub struct ProofCommitmentChallenge<C: BlsSignatureImpl>(
     #[serde(deserialize_with = "traits::scalar::deserialize::<C, _>")]
     pub <<C as Pairing>::PublicKey as Group>::Scalar,
 );
+
+impl_from_derivatives!(ProofCommitmentChallenge);
+
+impl<C: BlsSignatureImpl> From<&ProofCommitmentChallenge<C>> for Vec<u8> {
+    fn from(value: &ProofCommitmentChallenge<C>) -> Self {
+        scalar_to_be_bytes::<C, SECRET_KEY_BYTES>(value.0).to_vec()
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&[u8]> for ProofCommitmentChallenge<C> {
+    type Error = BlsError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        let bytes = <[u8; 32]>::try_from(value)
+            .map_err(|_| BlsError::InvalidInputs("Invalid secret key bytes".to_string()))?;
+        let value = scalar_from_be_bytes::<C, SECRET_KEY_BYTES>(&bytes).map(Self);
+        Option::from(value)
+            .ok_or_else(|| BlsError::InvalidInputs("Invalid secret key bytes".to_string()))
+    }
+}
 
 impl<C: BlsSignatureImpl> ProofCommitmentChallenge<C> {
     /// Create a new random secret key

@@ -64,6 +64,37 @@ impl<C: BlsSignatureImpl> subtle::ConditionallySelectable for SignatureShare<C> 
     }
 }
 
+impl_from_derivatives!(SignatureShare);
+
+impl<C: BlsSignatureImpl> From<&SignatureShare<C>> for Vec<u8> {
+    fn from(s: &SignatureShare<C>) -> Self {
+        match s {
+            SignatureShare::Basic(s) => serde_bare::to_vec(&(SignatureSchemes::Basic, s)).unwrap(),
+            SignatureShare::MessageAugmentation(s) => {
+                serde_bare::to_vec(&(SignatureSchemes::MessageAugmentation, s)).unwrap()
+            }
+            SignatureShare::ProofOfPossession(s) => {
+                serde_bare::to_vec(&(SignatureSchemes::ProofOfPossession, s)).unwrap()
+            }
+        }
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&[u8]> for SignatureShare<C> {
+    type Error = BlsError;
+
+    fn try_from(bytes: &[u8]) -> BlsResult<Self> {
+        let (scheme, s): (SignatureSchemes, <C as Pairing>::SignatureShare) =
+            serde_bare::from_slice(bytes)
+                .map_err(|_| BlsError::InvalidInputs("invalid byte sequence".to_string()))?;
+        match scheme {
+            SignatureSchemes::Basic => Ok(Self::Basic(s)),
+            SignatureSchemes::MessageAugmentation => Ok(Self::MessageAugmentation(s)),
+            SignatureSchemes::ProofOfPossession => Ok(Self::ProofOfPossession(s)),
+        }
+    }
+}
+
 impl<C: BlsSignatureImpl> SignatureShare<C> {
     /// Verify the signature share with the public key share
     pub fn verify<B: AsRef<[u8]>>(&self, pks: &PublicKeyShare<C>, msg: B) -> BlsResult<()> {

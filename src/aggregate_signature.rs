@@ -104,6 +104,22 @@ impl<C: BlsSignatureImpl> TryFrom<&[Signature<C>]> for AggregateSignature<C> {
     }
 }
 
+impl_from_derivatives!(AggregateSignature);
+
+impl<C: BlsSignatureImpl> From<&AggregateSignature<C>> for Vec<u8> {
+    fn from(value: &AggregateSignature<C>) -> Self {
+        serde_bare::to_vec(value).unwrap()
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&[u8]> for AggregateSignature<C> {
+    type Error = BlsError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        serde_bare::from_slice(value).map_err(|e| BlsError::InvalidInputs(e.to_string()))
+    }
+}
+
 impl<C: BlsSignatureImpl> AggregateSignature<C> {
     /// Accumulate multiple signatures into a single signature
     /// Verify fails if any signed message is a duplicate

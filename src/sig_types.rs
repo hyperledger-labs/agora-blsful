@@ -5,11 +5,11 @@ use crate::BlsError;
 #[repr(u8)]
 pub enum SignatureSchemes {
     /// The basic signature algorithm scheme
-    Basic = 1,
+    Basic = 0,
     /// The message augmentation signature algorithm scheme
-    MessageAugmentation = 2,
+    MessageAugmentation = 1,
     /// The proof of possession signature algorithm scheme
-    ProofOfPossession = 3,
+    ProofOfPossession = 2,
 }
 
 impl Default for SignatureSchemes {
@@ -21,8 +21,8 @@ impl Default for SignatureSchemes {
 impl From<u8> for SignatureSchemes {
     fn from(value: u8) -> Self {
         match value {
-            1 => Self::Basic,
-            2 => Self::MessageAugmentation,
+            0 => Self::Basic,
+            1 => Self::MessageAugmentation,
             _ => Self::ProofOfPossession,
         }
     }

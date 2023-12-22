@@ -1,4 +1,3 @@
-use crate::inner_types::*;
 use crate::*;
 use subtle::ConditionallySelectable;
 
@@ -78,11 +77,7 @@ impl<C: BlsSignatureImpl> ConditionallySelectable for Signature<C> {
     }
 }
 
-impl<C: BlsSignatureImpl> From<Signature<C>> for Vec<u8> {
-    fn from(value: Signature<C>) -> Self {
-        Vec::from(&value)
-    }
-}
+impl_from_derivatives!(Signature);
 
 impl<C: BlsSignatureImpl> From<&Signature<C>> for Vec<u8> {
     fn from(value: &Signature<C>) -> Self {
@@ -90,43 +85,11 @@ impl<C: BlsSignatureImpl> From<&Signature<C>> for Vec<u8> {
     }
 }
 
-impl<C: BlsSignatureImpl> TryFrom<Vec<u8>> for Signature<C> {
-    type Error = BlsError;
-
-    fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-        Self::try_from(&value)
-    }
-}
-
-impl<C: BlsSignatureImpl> TryFrom<&Vec<u8>> for Signature<C> {
-    type Error = BlsError;
-
-    fn try_from(value: &Vec<u8>) -> Result<Self, Self::Error> {
-        Self::try_from(value.as_slice())
-    }
-}
-
 impl<C: BlsSignatureImpl> TryFrom<&[u8]> for Signature<C> {
     type Error = BlsError;
 
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        let len = C::Signature::default().to_bytes().as_ref().len() + 1;
-        if value.len() != len {
-            return Err(BlsError::InvalidInputs(format!(
-                "Invalid length, expected {}, got {}",
-                len,
-                value.len()
-            )));
-        }
         serde_bare::from_slice(value).map_err(|e| BlsError::InvalidInputs(e.to_string()))
-    }
-}
-
-impl<C: BlsSignatureImpl> TryFrom<Box<[u8]>> for Signature<C> {
-    type Error = BlsError;
-
-    fn try_from(value: Box<[u8]>) -> Result<Self, Self::Error> {
-        Self::try_from(value.as_ref())
     }
 }
 

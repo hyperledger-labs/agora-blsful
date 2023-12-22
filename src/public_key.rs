@@ -44,31 +44,11 @@ impl<C: BlsSignatureImpl> subtle::ConditionallySelectable for PublicKey<C> {
     }
 }
 
-impl<C: BlsSignatureImpl> From<PublicKey<C>> for Vec<u8> {
-    fn from(value: PublicKey<C>) -> Self {
-        Self::from(&value)
-    }
-}
+impl_from_derivatives!(PublicKey);
 
 impl<C: BlsSignatureImpl> From<&PublicKey<C>> for Vec<u8> {
     fn from(value: &PublicKey<C>) -> Self {
         value.0.to_bytes().as_ref().to_vec()
-    }
-}
-
-impl<C: BlsSignatureImpl> TryFrom<Vec<u8>> for PublicKey<C> {
-    type Error = BlsError;
-
-    fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-        Self::try_from(&value)
-    }
-}
-
-impl<C: BlsSignatureImpl> TryFrom<&Vec<u8>> for PublicKey<C> {
-    type Error = BlsError;
-
-    fn try_from(value: &Vec<u8>) -> Result<Self, Self::Error> {
-        Self::try_from(value.as_slice())
     }
 }
 
@@ -91,14 +71,6 @@ impl<C: BlsSignatureImpl> TryFrom<&[u8]> for PublicKey<C> {
         let key: Option<C::PublicKey> = C::PublicKey::from_bytes(&repr).into();
         key.map(Self)
             .ok_or_else(|| BlsError::InvalidInputs("Invalid byte sequence".to_string()))
-    }
-}
-
-impl<C: BlsSignatureImpl> TryFrom<Box<[u8]>> for PublicKey<C> {
-    type Error = BlsError;
-
-    fn try_from(value: Box<[u8]>) -> Result<Self, Self::Error> {
-        Self::try_from(value.as_ref())
     }
 }
 

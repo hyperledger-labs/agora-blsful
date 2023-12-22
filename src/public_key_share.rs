@@ -32,6 +32,23 @@ impl<C: BlsSignatureImpl> core::fmt::Display for PublicKeyShare<C> {
     }
 }
 
+impl_from_derivatives!(PublicKeyShare);
+
+impl<C: BlsSignatureImpl> From<&PublicKeyShare<C>> for Vec<u8> {
+    fn from(pk: &PublicKeyShare<C>) -> Vec<u8> {
+        serde_bare::to_vec(&pk.0).unwrap()
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&[u8]> for PublicKeyShare<C> {
+    type Error = BlsError;
+    fn try_from(bytes: &[u8]) -> BlsResult<Self> {
+        serde_bare::from_slice(bytes)
+            .map(Self)
+            .map_err(|e| BlsError::InvalidInputs(e.to_string()))
+    }
+}
+
 impl<C: BlsSignatureImpl> PublicKeyShare<C> {
     /// Verify the signature share with the public key share
     pub fn verify<B: AsRef<[u8]>>(&self, sig: &SignatureShare<C>, msg: B) -> BlsResult<()> {

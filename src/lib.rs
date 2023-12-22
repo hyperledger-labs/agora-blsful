@@ -16,6 +16,8 @@
 #[cfg(all(not(feature = "rust"), not(feature = "blst")))]
 compile_error!("At least `rust` or `blst` must be selected");
 
+#[macro_use]
+mod macros;
 mod helpers;
 
 use helpers::*;
