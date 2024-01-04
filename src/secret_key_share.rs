@@ -63,4 +63,9 @@ impl<C: BlsSignatureImpl> SecretKeyShare<C> {
             )),
         }
     }
+
+    /// Extract the inner raw representation
+    pub fn as_raw_value(&self) -> &<C as Pairing>::SecretKeyShare {
+        &self.0
+    }
 }
