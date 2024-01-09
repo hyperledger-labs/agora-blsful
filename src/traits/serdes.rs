@@ -24,6 +24,11 @@ pub trait BlsSerde: Pairing {
         public_key: &Self::PublicKey,
         serializer: S,
     ) -> Result<S::Ok, S::Error>;
+    /// Serialize a public key share
+    fn serialize_public_key_share<S: Serializer>(
+        public_key_share: &Self::PublicKeyShare,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>;
 
     /// Deserialize a scalar
     fn deserialize_scalar<'de, D: Deserializer<'de>>(
@@ -41,6 +46,10 @@ pub trait BlsSerde: Pairing {
     fn deserialize_public_key<'de, D: Deserializer<'de>>(
         deserializer: D,
     ) -> Result<Self::PublicKey, D::Error>;
+    /// Deserialize a public key share
+    fn deserialize_public_key_share<'de, D: Deserializer<'de>>(
+        deserializer: D,
+    ) -> Result<Self::PublicKeyShare, D::Error>;
 }
 
 pub(crate) mod secret_key_share {
@@ -57,6 +66,23 @@ pub(crate) mod secret_key_share {
         d: D,
     ) -> Result<B::SecretKeyShare, D::Error> {
         B::deserialize_scalar_share(d)
+    }
+}
+
+pub(crate) mod public_key_share {
+    use super::*;
+
+    pub fn serialize<B: BlsSerde, S: Serializer>(
+        pks: &B::PublicKeyShare,
+        s: S,
+    ) -> Result<S::Ok, S::Error> {
+        B::serialize_public_key_share(pks, s)
+    }
+
+    pub fn deserialize<'de, B: BlsSerde, D: Deserializer<'de>>(
+        d: D,
+    ) -> Result<B::PublicKeyShare, D::Error> {
+        B::deserialize_public_key_share(d)
     }
 }
 

@@ -5,6 +5,10 @@ use crate::*;
 #[derive(Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ElGamalProof<C: BlsSignatureImpl> {
     /// The el-gamal ciphertext
+    #[serde(bound(
+        serialize = "ElGamalCiphertext<C>: Serialize",
+        deserialize = "ElGamalCiphertext<C>: Deserialize<'de>"
+    ))]
     pub ciphertext: ElGamalCiphertext<C>,
     /// The proof of encrypted message
     #[serde(serialize_with = "traits::scalar::serialize::<C, _>")]
@@ -47,6 +51,23 @@ impl<C: BlsSignatureImpl> Clone for ElGamalProof<C> {
         *self
     }
 }
+
+impl<C: BlsSignatureImpl> From<&ElGamalProof<C>> for Vec<u8> {
+    fn from(value: &ElGamalProof<C>) -> Self {
+        serde_bare::to_vec(value).expect("Failed to serialize ElGamalProof")
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&[u8]> for ElGamalProof<C> {
+    type Error = BlsError;
+
+    fn try_from(value: &[u8]) -> BlsResult<Self> {
+        let proof = serde_bare::from_slice(value)?;
+        Ok(proof)
+    }
+}
+
+impl_from_derivatives!(ElGamalProof);
 
 impl<C: BlsSignatureImpl> ElGamalProof<C> {
     /// Verify the proof and ciphertext are valid

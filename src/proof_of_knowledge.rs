@@ -110,6 +110,23 @@ impl<C: BlsSignatureImpl> subtle::ConditionallySelectable for ProofOfKnowledge<C
     }
 }
 
+impl<C: BlsSignatureImpl> From<&ProofOfKnowledge<C>> for Vec<u8> {
+    fn from(value: &ProofOfKnowledge<C>) -> Self {
+        serde_bare::to_vec(value).expect("Failed to serialize ProofOfKnowledge")
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&[u8]> for ProofOfKnowledge<C> {
+    type Error = BlsError;
+
+    fn try_from(value: &[u8]) -> BlsResult<Self> {
+        let output = serde_bare::from_slice(value)?;
+        Ok(output)
+    }
+}
+
+impl_from_derivatives!(ProofOfKnowledge);
+
 impl<C: BlsSignatureImpl> ProofOfKnowledge<C> {
     /// Verify the proof of knowledge
     pub fn verify<B: AsRef<[u8]>>(
@@ -151,6 +168,10 @@ impl<C: BlsSignatureImpl> ProofOfKnowledge<C> {
 #[derive(PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct ProofOfKnowledgeTimestamp<C: BlsSignatureImpl> {
     /// The inner proof of knowledge
+    #[serde(bound(
+        serialize = "ProofOfKnowledge<C>: serde::Serialize",
+        deserialize = "ProofOfKnowledge<C>: serde::Deserialize<'de>"
+    ))]
     pub proof: ProofOfKnowledge<C>,
     /// The timestamp associated with the proof
     pub timestamp: u64,
@@ -204,6 +225,23 @@ impl<C: BlsSignatureImpl> subtle::ConditionallySelectable for ProofOfKnowledgeTi
         }
     }
 }
+
+impl<C: BlsSignatureImpl> From<&ProofOfKnowledgeTimestamp<C>> for Vec<u8> {
+    fn from(value: &ProofOfKnowledgeTimestamp<C>) -> Self {
+        serde_bare::to_vec(value).expect("Failed to serialize ProofOfKnowledgeTimestamp")
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&[u8]> for ProofOfKnowledgeTimestamp<C> {
+    type Error = BlsError;
+
+    fn try_from(value: &[u8]) -> BlsResult<Self> {
+        let output = serde_bare::from_slice(value)?;
+        Ok(output)
+    }
+}
+
+impl_from_derivatives!(ProofOfKnowledgeTimestamp);
 
 impl<C: BlsSignatureImpl> ProofOfKnowledgeTimestamp<C> {
     /// Create a new signature proof of knowledge using a timestamp

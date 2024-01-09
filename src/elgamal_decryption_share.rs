@@ -4,7 +4,11 @@ use crate::*;
 /// Must be combined with other public key shares
 /// in order to decrypt a ciphertext
 #[derive(PartialEq, Eq, Serialize, Deserialize)]
-pub struct ElGamalDecryptionShare<C: BlsSignatureImpl>(pub <C as Pairing>::PublicKeyShare);
+pub struct ElGamalDecryptionShare<C: BlsSignatureImpl>(
+    #[serde(serialize_with = "traits::public_key_share::serialize::<C, _>")]
+    #[serde(deserialize_with = "traits::public_key_share::deserialize::<C, _>")]
+    pub <C as Pairing>::PublicKeyShare,
+);
 
 impl<C: BlsSignatureImpl> Clone for ElGamalDecryptionShare<C> {
     fn clone(&self) -> Self {
@@ -20,6 +24,23 @@ impl<C: BlsSignatureImpl> core::fmt::Debug for ElGamalDecryptionShare<C> {
 
 impl<C: BlsSignatureImpl> ElGamalDecryptionShare<C> {}
 
+impl<C: BlsSignatureImpl> From<&ElGamalDecryptionShare<C>> for Vec<u8> {
+    fn from(value: &ElGamalDecryptionShare<C>) -> Self {
+        serde_bare::to_vec(value).expect("failed to serialize ElGamalDecryptionShare")
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&[u8]> for ElGamalDecryptionShare<C> {
+    type Error = BlsError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        let share = serde_bare::from_slice(value)?;
+        Ok(share)
+    }
+}
+
+impl_from_derivatives!(ElGamalDecryptionShare);
+
 /// An ElGamal decryption key where the secret key is hidden or combined from shares
 /// that can decrypt ciphertext
 #[derive(Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -34,6 +55,23 @@ impl<C: BlsSignatureImpl> Clone for ElGamalDecryptionKey<C> {
         Self(self.0)
     }
 }
+
+impl<C: BlsSignatureImpl> From<&ElGamalDecryptionKey<C>> for Vec<u8> {
+    fn from(value: &ElGamalDecryptionKey<C>) -> Self {
+        serde_bare::to_vec(value).expect("failed to serialize ElGamalDecryptionKey")
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&[u8]> for ElGamalDecryptionKey<C> {
+    type Error = BlsError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        let key = serde_bare::from_slice(value)?;
+        Ok(key)
+    }
+}
+
+impl_from_derivatives!(ElGamalDecryptionKey);
 
 impl<C: BlsSignatureImpl> ElGamalDecryptionKey<C> {
     /// Decrypt signcrypt ciphertext

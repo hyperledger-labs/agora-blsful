@@ -62,6 +62,13 @@ impl BlsSerde for Bls12381G2Impl {
         public_key.serialize(serializer)
     }
 
+    fn serialize_public_key_share<S: Serializer>(
+        public_key_share: &Self::PublicKeyShare,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error> {
+        public_key_share.serialize(serializer)
+    }
+
     fn deserialize_scalar<'de, D: Deserializer<'de>>(
         deserializer: D,
     ) -> Result<<Self::PublicKey as Group>::Scalar, D::Error> {
@@ -84,6 +91,12 @@ impl BlsSerde for Bls12381G2Impl {
         deserializer: D,
     ) -> Result<Self::PublicKey, D::Error> {
         Self::PublicKey::deserialize(deserializer)
+    }
+
+    fn deserialize_public_key_share<'de, D: Deserializer<'de>>(
+        deserializer: D,
+    ) -> Result<Self::PublicKeyShare, D::Error> {
+        Self::PublicKeyShare::deserialize(deserializer)
     }
 }
 

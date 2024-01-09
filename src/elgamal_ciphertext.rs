@@ -96,6 +96,23 @@ impl<'a, C: BlsSignatureImpl> AddAssign<&'a ElGamalCiphertext<C>> for ElGamalCip
     }
 }
 
+impl<C: BlsSignatureImpl> From<&ElGamalCiphertext<C>> for Vec<u8> {
+    fn from(value: &ElGamalCiphertext<C>) -> Self {
+        serde_bare::to_vec(value).expect("failed to serialize ElGamalCiphertext")
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&[u8]> for ElGamalCiphertext<C> {
+    type Error = BlsError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        let ciphertext = serde_bare::from_slice(value)?;
+        Ok(ciphertext)
+    }
+}
+
+impl_from_derivatives!(ElGamalCiphertext);
+
 impl<C: BlsSignatureImpl> ElGamalCiphertext<C> {
     /// Decrypt this ciphertext
     pub fn decrypt(&self, sk: &SecretKey<C>) -> <C as Pairing>::PublicKey {

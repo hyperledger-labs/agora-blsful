@@ -36,6 +36,8 @@ impl<C: BlsSignatureImpl> TryFrom<&[u8]> for SignDecryptionShare<C> {
     }
 }
 
+impl_from_derivatives!(SignDecryptionShare);
+
 impl<C: BlsSignatureImpl> SignDecryptionShare<C> {
     /// Verify the signcrypt decryption share with the corresponding public key and ciphertext
     pub fn verify(&self, pks: &PublicKeyShare<C>, sig: &SignCryptCiphertext<C>) -> BlsResult<()> {

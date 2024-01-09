@@ -28,6 +28,23 @@ impl<C: BlsSignatureImpl> core::fmt::Display for SignCryptCiphertext<C> {
     }
 }
 
+impl<C: BlsSignatureImpl> From<&SignCryptCiphertext<C>> for Vec<u8> {
+    fn from(value: &SignCryptCiphertext<C>) -> Self {
+        serde_bare::to_vec(value).expect("failed to serialize SignCryptCiphertext")
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&[u8]> for SignCryptCiphertext<C> {
+    type Error = BlsError;
+
+    fn try_from(value: &[u8]) -> BlsResult<Self> {
+        let output = serde_bare::from_slice(value)?;
+        Ok(output)
+    }
+}
+
+impl_from_derivatives!(SignCryptCiphertext);
+
 impl<C: BlsSignatureImpl> SignCryptCiphertext<C> {
     /// Create a decryption share from a secret key share
     pub fn create_decryption_share(
@@ -104,6 +121,23 @@ impl<C: BlsSignatureImpl> Clone for SignCryptDecryptionKey<C> {
         Self(self.0)
     }
 }
+
+impl<C: BlsSignatureImpl> From<&SignCryptDecryptionKey<C>> for Vec<u8> {
+    fn from(value: &SignCryptDecryptionKey<C>) -> Self {
+        serde_bare::to_vec(value).expect("failed to serialize SignCryptDecryptionKey")
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&[u8]> for SignCryptDecryptionKey<C> {
+    type Error = BlsError;
+
+    fn try_from(value: &[u8]) -> BlsResult<Self> {
+        let output = serde_bare::from_slice(value)?;
+        Ok(output)
+    }
+}
+
+impl_from_derivatives!(SignCryptDecryptionKey);
 
 impl<C: BlsSignatureImpl> SignCryptDecryptionKey<C> {
     /// Decrypt signcrypt ciphertext

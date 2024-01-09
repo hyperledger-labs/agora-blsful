@@ -16,6 +16,23 @@ pub struct TimeCryptCiphertext<C: BlsSignatureImpl> {
     pub scheme: SignatureSchemes,
 }
 
+impl<C: BlsSignatureImpl> From<&TimeCryptCiphertext<C>> for Vec<u8> {
+    fn from(value: &TimeCryptCiphertext<C>) -> Self {
+        serde_bare::to_vec(value).expect("failed to serialize time crypt ciphertext")
+    }
+}
+
+impl<C: BlsSignatureImpl> TryFrom<&[u8]> for TimeCryptCiphertext<C> {
+    type Error = BlsError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        let output = serde_bare::from_slice(value)?;
+        Ok(output)
+    }
+}
+
+impl_from_derivatives!(TimeCryptCiphertext);
+
 impl<C: BlsSignatureImpl> TimeCryptCiphertext<C> {
     /// Decrypt the time lock ciphertext using a signature over an identifier
     pub fn decrypt(&self, sig: &Signature<C>) -> CtOption<Vec<u8>> {
