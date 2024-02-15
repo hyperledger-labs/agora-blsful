@@ -102,6 +102,20 @@ impl Default for InnerPointShareG1 {
     }
 }
 
+impl TryFrom<&[u8]> for InnerPointShareG1 {
+    type Error = std::array::TryFromSliceError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        Ok(Self(value.try_into()?))
+    }
+}
+
+impl From<InnerPointShareG1> for Vec<u8> {
+    fn from(value: InnerPointShareG1) -> Self {
+        value.0.into()
+    }
+}
+
 impl core::fmt::LowerHex for InnerPointShareG1 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         for &b in &self.0 {
@@ -173,6 +187,20 @@ impl subtle::ConditionallySelectable for InnerPointShareG2 {
 impl Default for InnerPointShareG2 {
     fn default() -> Self {
         Self([0u8; 97])
+    }
+}
+
+impl TryFrom<&[u8]> for InnerPointShareG2 {
+    type Error = std::array::TryFromSliceError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        Ok(Self(value.try_into()?))
+    }
+}
+
+impl From<InnerPointShareG2> for Vec<u8> {
+    fn from(value: InnerPointShareG2) -> Self {
+        value.0.into()
     }
 }
 
