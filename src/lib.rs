@@ -102,17 +102,49 @@ impl Default for InnerPointShareG1 {
     }
 }
 
+impl TryFrom<Vec<u8>> for InnerPointShareG1 {
+    type Error = BlsError;
+
+    fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
+        Self::try_from(&value)
+    }
+}
+
+impl TryFrom<&Vec<u8>> for InnerPointShareG1 {
+    type Error = BlsError;
+
+    fn try_from(value: &Vec<u8>) -> Result<Self, Self::Error> {
+        Self::try_from(value.as_slice())
+    }
+}
+
 impl TryFrom<&[u8]> for InnerPointShareG1 {
-    type Error = std::array::TryFromSliceError;
+    type Error = BlsError;
 
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        Ok(Self(value.try_into()?))
+        Ok(Self(value.try_into().map_err(
+            |e: std::array::TryFromSliceError| BlsError::DeserializationError(e.to_string()),
+        )?))
+    }
+}
+
+impl TryFrom<Box<[u8]>> for InnerPointShareG1 {
+    type Error = BlsError;
+
+    fn try_from(value: Box<[u8]>) -> Result<Self, Self::Error> {
+        Self::try_from(value.as_ref())
     }
 }
 
 impl From<InnerPointShareG1> for Vec<u8> {
     fn from(value: InnerPointShareG1) -> Self {
-        value.0.into()
+        Self::from(&value)
+    }
+}
+
+impl From<&InnerPointShareG1> for Vec<u8> {
+    fn from(value: &InnerPointShareG1) -> Self {
+        value.0.to_vec()
     }
 }
 
@@ -190,17 +222,49 @@ impl Default for InnerPointShareG2 {
     }
 }
 
+impl TryFrom<Vec<u8>> for InnerPointShareG2 {
+    type Error = BlsError;
+
+    fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
+        Self::try_from(&value)
+    }
+}
+
+impl TryFrom<&Vec<u8>> for InnerPointShareG2 {
+    type Error = BlsError;
+
+    fn try_from(value: &Vec<u8>) -> Result<Self, Self::Error> {
+        Self::try_from(value.as_slice())
+    }
+}
+
 impl TryFrom<&[u8]> for InnerPointShareG2 {
-    type Error = std::array::TryFromSliceError;
+    type Error = BlsError;
 
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        Ok(Self(value.try_into()?))
+        Ok(Self(value.try_into().map_err(
+            |e: std::array::TryFromSliceError| BlsError::DeserializationError(e.to_string()),
+        )?))
+    }
+}
+
+impl TryFrom<Box<[u8]>> for InnerPointShareG2 {
+    type Error = BlsError;
+
+    fn try_from(value: Box<[u8]>) -> Result<Self, Self::Error> {
+        Self::try_from(value.as_ref())
     }
 }
 
 impl From<InnerPointShareG2> for Vec<u8> {
     fn from(value: InnerPointShareG2) -> Self {
-        value.0.into()
+        Self::from(&value)
+    }
+}
+
+impl From<&InnerPointShareG2> for Vec<u8> {
+    fn from(value: &InnerPointShareG2) -> Self {
+        value.0.to_vec()
     }
 }
 

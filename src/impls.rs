@@ -8,7 +8,11 @@ pub use g1::*;
 pub use g2::*;
 
 use crate::*;
-use core::marker::PhantomData;
+use core::{
+    fmt::{self, Display, Formatter},
+    marker::PhantomData,
+    str::FromStr,
+};
 use rand::Rng;
 use rand_core::{CryptoRng, RngCore};
 
@@ -19,9 +23,21 @@ pub trait BlsSignatureImpl:
 }
 
 /// A BLS signature implementation
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub struct BlsSignature<T: BlsSignatureImpl>(PhantomData<T>);
 
+impl Default for BlsSignature<Bls12381G1Impl> {
+    fn default() -> Self {
+        BlsSignature(PhantomData)
+    }
+}
+
 impl<T: BlsSignatureImpl> BlsSignature<T> {
+    /// Create a new BLS signature implementation
+    pub fn new() -> Self {
+        BlsSignature(PhantomData)
+    }
+
     /// Create a new random secret key
     pub fn new_secret_key() -> SecretKey<T> {
         SecretKey::random(get_crypto_rng())
@@ -69,6 +85,105 @@ pub type Bls12381G1 = BlsSignature<Bls12381G1Impl>;
 
 /// A BLS signature implementation using G2 for signatures and G1 for public keys
 pub type Bls12381G2 = BlsSignature<Bls12381G2Impl>;
+
+/// A convenience wrapper for the two BLS signature implementations
+/// that doesn't require specifying the generics and can be used in
+/// trait object like situations.
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub enum Bls12381 {
+    /// A BLS signature implementation using G1 for signatures and G2 for public keys
+    G1(Bls12381G1),
+    /// A BLS signature implementation using G2 for signatures and G1 for public keys
+    G2(Bls12381G2),
+}
+
+impl Default for Bls12381 {
+    fn default() -> Self {
+        Bls12381::G1(Bls12381G1::default())
+    }
+}
+
+impl From<Bls12381> for u8 {
+    fn from(bls: Bls12381) -> u8 {
+        match bls {
+            Bls12381::G1(_) => 1,
+            Bls12381::G2(_) => 2,
+        }
+    }
+}
+
+impl From<&Bls12381> for u8 {
+    fn from(bls: &Bls12381) -> u8 {
+        u8::from(*bls)
+    }
+}
+
+impl TryFrom<u8> for Bls12381 {
+    type Error = BlsError;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            1 => Ok(Bls12381::G1(Bls12381G1::default())),
+            2 => Ok(Bls12381::G2(BlsSignature::<Bls12381G2Impl>::new())),
+            _ => Err(BlsError::DeserializationError(
+                "Invalid BLS12381 type".to_string(),
+            )),
+        }
+    }
+}
+
+impl TryFrom<&u8> for Bls12381 {
+    type Error = BlsError;
+
+    fn try_from(value: &u8) -> Result<Self, Self::Error> {
+        Self::try_from(*value)
+    }
+}
+
+impl Display for Bls12381 {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Bls12381::G1(_) => write!(f, "BLS12381G1"),
+            Bls12381::G2(_) => write!(f, "BLS12381G2"),
+        }
+    }
+}
+
+impl FromStr for Bls12381 {
+    type Err = BlsError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "BLS12381G1" => Ok(Bls12381::G1(Bls12381G1::default())),
+            "BLS12381G2" => Ok(Bls12381::G2(BlsSignature::<Bls12381G2Impl>::new())),
+            _ => Err(BlsError::DeserializationError(
+                "Invalid BLS12381 type".to_string(),
+            )),
+        }
+    }
+}
+
+impl Serialize for Bls12381 {
+    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        if s.is_human_readable() {
+            s.serialize_str(&self.to_string())
+        } else {
+            s.serialize_u8(u8::from(self))
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for Bls12381 {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        if d.is_human_readable() {
+            let s = String::deserialize(d)?;
+            Bls12381::from_str(&s).map_err(serde::de::Error::custom)
+        } else {
+            let u = u8::deserialize(d)?;
+            Bls12381::try_from(u).map_err(serde::de::Error::custom)
+        }
+    }
+}
 
 /// The inner representation types
 pub mod inner_types {
