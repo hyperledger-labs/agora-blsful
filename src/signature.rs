@@ -77,7 +77,7 @@ impl<C: BlsSignatureImpl> ConditionallySelectable for Signature<C> {
     }
 }
 
-impl_from_derivatives!(Signature);
+impl_from_derivatives_generic!(Signature);
 
 impl<C: BlsSignatureImpl> From<&Signature<C>> for Vec<u8> {
     fn from(value: &Signature<C>) -> Self {

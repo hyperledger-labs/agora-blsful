@@ -44,7 +44,7 @@ impl<C: BlsSignatureImpl> From<&[PublicKey<C>]> for MultiPublicKey<C> {
     }
 }
 
-impl_from_derivatives!(MultiPublicKey);
+impl_from_derivatives_generic!(MultiPublicKey);
 
 impl<C: BlsSignatureImpl> From<&MultiPublicKey<C>> for Vec<u8> {
     fn from(pk: &MultiPublicKey<C>) -> Self {

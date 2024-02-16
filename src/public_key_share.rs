@@ -32,7 +32,7 @@ impl<C: BlsSignatureImpl> core::fmt::Display for PublicKeyShare<C> {
     }
 }
 
-impl_from_derivatives!(PublicKeyShare);
+impl_from_derivatives_generic!(PublicKeyShare);
 
 impl<C: BlsSignatureImpl> From<&PublicKeyShare<C>> for Vec<u8> {
     fn from(pk: &PublicKeyShare<C>) -> Vec<u8> {

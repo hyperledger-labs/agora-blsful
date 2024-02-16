@@ -43,7 +43,7 @@ impl<C: BlsSignatureImpl> TryFrom<&[u8]> for SignCryptCiphertext<C> {
     }
 }
 
-impl_from_derivatives!(SignCryptCiphertext);
+impl_from_derivatives_generic!(SignCryptCiphertext);
 
 impl<C: BlsSignatureImpl> SignCryptCiphertext<C> {
     /// Create a decryption share from a secret key share
@@ -137,7 +137,7 @@ impl<C: BlsSignatureImpl> TryFrom<&[u8]> for SignCryptDecryptionKey<C> {
     }
 }
 
-impl_from_derivatives!(SignCryptDecryptionKey);
+impl_from_derivatives_generic!(SignCryptDecryptionKey);
 
 impl<C: BlsSignatureImpl> SignCryptDecryptionKey<C> {
     /// Decrypt signcrypt ciphertext

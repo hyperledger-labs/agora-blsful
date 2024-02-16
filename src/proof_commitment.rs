@@ -83,7 +83,7 @@ impl<C: BlsSignatureImpl> subtle::ConditionallySelectable for ProofCommitment<C>
     }
 }
 
-impl_from_derivatives!(ProofCommitment);
+impl_from_derivatives_generic!(ProofCommitment);
 
 impl<C: BlsSignatureImpl> From<&ProofCommitment<C>> for Vec<u8> {
     fn from(value: &ProofCommitment<C>) -> Self {
@@ -174,7 +174,7 @@ pub struct ProofCommitmentSecret<C: BlsSignatureImpl>(
     pub <<C as Pairing>::PublicKey as Group>::Scalar,
 );
 
-impl_from_derivatives!(ProofCommitmentSecret);
+impl_from_derivatives_generic!(ProofCommitmentSecret);
 
 impl<C: BlsSignatureImpl> From<&ProofCommitmentSecret<C>> for Vec<u8> {
     fn from(value: &ProofCommitmentSecret<C>) -> Self {
@@ -226,7 +226,7 @@ pub struct ProofCommitmentChallenge<C: BlsSignatureImpl>(
     pub <<C as Pairing>::PublicKey as Group>::Scalar,
 );
 
-impl_from_derivatives!(ProofCommitmentChallenge);
+impl_from_derivatives_generic!(ProofCommitmentChallenge);
 
 impl<C: BlsSignatureImpl> From<&ProofCommitmentChallenge<C>> for Vec<u8> {
     fn from(value: &ProofCommitmentChallenge<C>) -> Self {

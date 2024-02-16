@@ -45,7 +45,7 @@ impl<C: BlsSignatureImpl> ConditionallySelectable for ProofOfPossession<C> {
     }
 }
 
-impl_from_derivatives!(ProofOfPossession);
+impl_from_derivatives_generic!(ProofOfPossession);
 
 impl<C: BlsSignatureImpl> From<&ProofOfPossession<C>> for Vec<u8> {
     fn from(value: &ProofOfPossession<C>) -> Self {

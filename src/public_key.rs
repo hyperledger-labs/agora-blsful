@@ -44,7 +44,7 @@ impl<C: BlsSignatureImpl> subtle::ConditionallySelectable for PublicKey<C> {
     }
 }
 
-impl_from_derivatives!(PublicKey);
+impl_from_derivatives_generic!(PublicKey);
 
 impl<C: BlsSignatureImpl> From<&PublicKey<C>> for Vec<u8> {
     fn from(value: &PublicKey<C>) -> Self {

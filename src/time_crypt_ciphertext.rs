@@ -31,7 +31,7 @@ impl<C: BlsSignatureImpl> TryFrom<&[u8]> for TimeCryptCiphertext<C> {
     }
 }
 
-impl_from_derivatives!(TimeCryptCiphertext);
+impl_from_derivatives_generic!(TimeCryptCiphertext);
 
 impl<C: BlsSignatureImpl> TimeCryptCiphertext<C> {
     /// Decrypt the time lock ciphertext using a signature over an identifier

@@ -104,7 +104,7 @@ impl<C: BlsSignatureImpl> TryFrom<&[Signature<C>]> for AggregateSignature<C> {
     }
 }
 
-impl_from_derivatives!(AggregateSignature);
+impl_from_derivatives_generic!(AggregateSignature);
 
 impl<C: BlsSignatureImpl> From<&AggregateSignature<C>> for Vec<u8> {
     fn from(value: &AggregateSignature<C>) -> Self {

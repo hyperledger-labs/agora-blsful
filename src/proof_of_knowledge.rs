@@ -125,7 +125,7 @@ impl<C: BlsSignatureImpl> TryFrom<&[u8]> for ProofOfKnowledge<C> {
     }
 }
 
-impl_from_derivatives!(ProofOfKnowledge);
+impl_from_derivatives_generic!(ProofOfKnowledge);
 
 impl<C: BlsSignatureImpl> ProofOfKnowledge<C> {
     /// Verify the proof of knowledge
@@ -241,7 +241,7 @@ impl<C: BlsSignatureImpl> TryFrom<&[u8]> for ProofOfKnowledgeTimestamp<C> {
     }
 }
 
-impl_from_derivatives!(ProofOfKnowledgeTimestamp);
+impl_from_derivatives_generic!(ProofOfKnowledgeTimestamp);
 
 impl<C: BlsSignatureImpl> ProofOfKnowledgeTimestamp<C> {
     /// Create a new signature proof of knowledge using a timestamp

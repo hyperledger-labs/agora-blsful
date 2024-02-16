@@ -89,25 +89,20 @@ pub type Bls12381G2 = BlsSignature<Bls12381G2Impl>;
 /// A convenience wrapper for the two BLS signature implementations
 /// that doesn't require specifying the generics and can be used in
 /// trait object like situations.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum Bls12381 {
     /// A BLS signature implementation using G1 for signatures and G2 for public keys
-    G1(Bls12381G1),
+    #[default]
+    G1,
     /// A BLS signature implementation using G2 for signatures and G1 for public keys
-    G2(Bls12381G2),
-}
-
-impl Default for Bls12381 {
-    fn default() -> Self {
-        Bls12381::G1(Bls12381G1::default())
-    }
+    G2,
 }
 
 impl From<Bls12381> for u8 {
     fn from(bls: Bls12381) -> u8 {
         match bls {
-            Bls12381::G1(_) => 1,
-            Bls12381::G2(_) => 2,
+            Bls12381::G1 => 1,
+            Bls12381::G2 => 2,
         }
     }
 }
@@ -123,8 +118,8 @@ impl TryFrom<u8> for Bls12381 {
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         match value {
-            1 => Ok(Bls12381::G1(Bls12381G1::default())),
-            2 => Ok(Bls12381::G2(BlsSignature::<Bls12381G2Impl>::new())),
+            1 => Ok(Bls12381::G1),
+            2 => Ok(Bls12381::G2),
             _ => Err(BlsError::DeserializationError(
                 "Invalid BLS12381 type".to_string(),
             )),
@@ -143,8 +138,8 @@ impl TryFrom<&u8> for Bls12381 {
 impl Display for Bls12381 {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
-            Bls12381::G1(_) => write!(f, "BLS12381G1"),
-            Bls12381::G2(_) => write!(f, "BLS12381G2"),
+            Bls12381::G1 => write!(f, "BLS12381G1"),
+            Bls12381::G2 => write!(f, "BLS12381G2"),
         }
     }
 }
@@ -154,8 +149,8 @@ impl FromStr for Bls12381 {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "BLS12381G1" => Ok(Bls12381::G1(Bls12381G1::default())),
-            "BLS12381G2" => Ok(Bls12381::G2(BlsSignature::<Bls12381G2Impl>::new())),
+            "BLS12381G1" => Ok(Bls12381::G1),
+            "BLS12381G2" => Ok(Bls12381::G2),
             _ => Err(BlsError::DeserializationError(
                 "Invalid BLS12381 type".to_string(),
             )),

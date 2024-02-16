@@ -39,7 +39,7 @@ impl<C: BlsSignatureImpl> TryFrom<&[u8]> for ElGamalDecryptionShare<C> {
     }
 }
 
-impl_from_derivatives!(ElGamalDecryptionShare);
+impl_from_derivatives_generic!(ElGamalDecryptionShare);
 
 /// An ElGamal decryption key where the secret key is hidden or combined from shares
 /// that can decrypt ciphertext
@@ -71,7 +71,7 @@ impl<C: BlsSignatureImpl> TryFrom<&[u8]> for ElGamalDecryptionKey<C> {
     }
 }
 
-impl_from_derivatives!(ElGamalDecryptionKey);
+impl_from_derivatives_generic!(ElGamalDecryptionKey);
 
 impl<C: BlsSignatureImpl> ElGamalDecryptionKey<C> {
     /// Decrypt signcrypt ciphertext

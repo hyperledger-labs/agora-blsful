@@ -111,7 +111,7 @@ impl<C: BlsSignatureImpl> TryFrom<&[u8]> for ElGamalCiphertext<C> {
     }
 }
 
-impl_from_derivatives!(ElGamalCiphertext);
+impl_from_derivatives_generic!(ElGamalCiphertext);
 
 impl<C: BlsSignatureImpl> ElGamalCiphertext<C> {
     /// Decrypt this ciphertext

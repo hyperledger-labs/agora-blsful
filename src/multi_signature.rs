@@ -106,7 +106,7 @@ impl<C: BlsSignatureImpl> TryFrom<&[Signature<C>]> for MultiSignature<C> {
     }
 }
 
-impl_from_derivatives!(MultiSignature);
+impl_from_derivatives_generic!(MultiSignature);
 
 impl<C: BlsSignatureImpl> From<&MultiSignature<C>> for Vec<u8> {
     fn from(value: &MultiSignature<C>) -> Self {

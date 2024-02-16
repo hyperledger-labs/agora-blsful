@@ -5,7 +5,9 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 /// Represents BLS signatures on the BLS12-381 curve where
 /// Signatures are in G1 and Public Keys are in G2 or
 /// i.e. signatures are small and public keys are large
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[derive(
+    Copy, Clone, Debug, Default, PartialEq, Eq, Ord, PartialOrd, Hash, Serialize, Deserialize,
+)]
 pub struct Bls12381G1Impl;
 
 impl HashToPoint for Bls12381G1Impl {

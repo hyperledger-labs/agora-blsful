@@ -21,7 +21,7 @@ impl<C: BlsSignatureImpl> Clone for SecretKeyShare<C> {
     }
 }
 
-impl_from_derivatives!(SecretKeyShare);
+impl_from_derivatives_generic!(SecretKeyShare);
 
 impl<C: BlsSignatureImpl> From<&SecretKeyShare<C>> for Vec<u8> {
     fn from(sk: &SecretKeyShare<C>) -> Self {

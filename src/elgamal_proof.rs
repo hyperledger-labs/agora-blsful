@@ -67,7 +67,7 @@ impl<C: BlsSignatureImpl> TryFrom<&[u8]> for ElGamalProof<C> {
     }
 }
 
-impl_from_derivatives!(ElGamalProof);
+impl_from_derivatives_generic!(ElGamalProof);
 
 impl<C: BlsSignatureImpl> ElGamalProof<C> {
     /// Verify the proof and ciphertext are valid

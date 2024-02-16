@@ -1,13 +1,226 @@
 use crate::helpers::{get_crypto_rng, KEYGEN_SALT};
 use crate::impls::inner_types::*;
 use crate::*;
+use core::fmt::{self, Formatter};
 use rand::Rng;
 use rand_core::{CryptoRng, RngCore};
+use serde::de::{SeqAccess, Visitor};
 use subtle::CtOption;
 use vsss_rs::{combine_shares, shamir};
 
 /// Number of bytes needed to represent the secret key
 pub const SECRET_KEY_BYTES: usize = 32;
+
+/// A BLS secret key implementation that doesn't expose the underlying curve
+/// and signature scheme and can be used in situations where the specific
+/// implementation is not known at compile time and where trait objects
+/// are desirable but can't be used due to the lack of `Sized` trait.
+/// The downside is the type is now indicated with a byte or string
+/// for serialization and deserialization. If this is not desirable,
+/// then use [`SecretKey<C>`](struct.SecretKey.html) instead.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum SecretKeyEnum {
+    /// A secret key for signatures in G1 and public keys in G2
+    G1(SecretKey<Bls12381G1Impl>),
+    /// A secret key for signatures in G2 and public keys in G1
+    G2(SecretKey<Bls12381G2Impl>),
+}
+
+impl Serialize for SecretKeyEnum {
+    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        match self {
+            SecretKeyEnum::G1(sk) => (Bls12381::G1, sk).serialize(s),
+            SecretKeyEnum::G2(sk) => (Bls12381::G2, sk).serialize(s),
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for SecretKeyEnum {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        struct SecretKeyEnumVisitor;
+
+        impl<'de> Visitor<'de> for SecretKeyEnumVisitor {
+            type Value = SecretKeyEnum;
+
+            fn expecting(&self, f: &mut Formatter<'_>) -> fmt::Result {
+                write!(f, "a tuple of the type and secret key")
+            }
+
+            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+            where
+                A: SeqAccess<'de>,
+            {
+                let ee = seq
+                    .next_element::<Bls12381>()?
+                    .ok_or_else(|| serde::de::Error::invalid_length(0, &self))?;
+                match ee {
+                    Bls12381::G1 => {
+                        let sk = seq
+                            .next_element::<SecretKey<Bls12381G1Impl>>()?
+                            .ok_or_else(|| serde::de::Error::invalid_length(1, &self))?;
+                        Ok(SecretKeyEnum::G1(sk))
+                    }
+                    Bls12381::G2 => {
+                        let sk = seq
+                            .next_element::<SecretKey<Bls12381G2Impl>>()?
+                            .ok_or_else(|| serde::de::Error::invalid_length(1, &self))?;
+                        Ok(SecretKeyEnum::G2(sk))
+                    }
+                }
+            }
+        }
+        d.deserialize_tuple(2, SecretKeyEnumVisitor)
+    }
+}
+
+impl Default for SecretKeyEnum {
+    fn default() -> Self {
+        Self::G1(SecretKey(Scalar::default()))
+    }
+}
+
+impl From<&SecretKeyEnum> for Vec<u8> {
+    fn from(value: &SecretKeyEnum) -> Self {
+        let (tt, mut output) = match value {
+            SecretKeyEnum::G1(sk) => (Bls12381::G1, Vec::from(sk)),
+            SecretKeyEnum::G2(sk) => (Bls12381::G2, Vec::from(sk)),
+        };
+        output.insert(0, tt as u8);
+        output
+    }
+}
+
+impl TryFrom<&[u8]> for SecretKeyEnum {
+    type Error = BlsError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        let ee = Bls12381::try_from(value[0])?;
+        match ee {
+            Bls12381::G1 => {
+                let sk = SecretKey::<Bls12381G1Impl>::try_from(&value[1..])?;
+                Ok(SecretKeyEnum::G1(sk))
+            }
+            Bls12381::G2 => {
+                let sk = SecretKey::<Bls12381G2Impl>::try_from(&value[1..])?;
+                Ok(SecretKeyEnum::G2(sk))
+            }
+        }
+    }
+}
+
+impl_from_derivatives!(SecretKeyEnum);
+
+impl SecretKeyEnum {
+    /// Create a new random secret key
+    pub fn new(t: Bls12381) -> Self {
+        match t {
+            Bls12381::G1 => SecretKeyEnum::G1(SecretKey::new()),
+            Bls12381::G2 => SecretKeyEnum::G2(SecretKey::new()),
+        }
+    }
+
+    /// Compute a secret key from a hash
+    pub fn from_hash<B: AsRef<[u8]>>(t: Bls12381, data: B) -> Self {
+        match t {
+            Bls12381::G1 => SecretKeyEnum::G1(SecretKey::from_hash(data)),
+            Bls12381::G2 => SecretKeyEnum::G2(SecretKey::from_hash(data)),
+        }
+    }
+
+    /// Compute a secret key from a CS-PRNG
+    pub fn random(t: Bls12381, rng: impl RngCore + CryptoRng) -> Self {
+        match t {
+            Bls12381::G1 => SecretKeyEnum::G1(SecretKey::random(rng)),
+            Bls12381::G2 => SecretKeyEnum::G2(SecretKey::random(rng)),
+        }
+    }
+
+    /// Get the big-endian byte representation of this key
+    pub fn to_be_bytes(&self) -> Vec<u8> {
+        let (t, mut output) = match self {
+            SecretKeyEnum::G1(sk) => (Bls12381::G1, Vec::from(sk.to_be_bytes())),
+            SecretKeyEnum::G2(sk) => (Bls12381::G2, Vec::from(sk.to_be_bytes())),
+        };
+        output.insert(0, t as u8);
+        output
+    }
+
+    /// Get the little-endian byte representation of this key
+    pub fn to_le_bytes(&self) -> Vec<u8> {
+        let (t, mut output) = match self {
+            SecretKeyEnum::G1(sk) => (Bls12381::G1, Vec::from(sk.to_le_bytes())),
+            SecretKeyEnum::G2(sk) => (Bls12381::G2, Vec::from(sk.to_le_bytes())),
+        };
+        output.insert(0, t as u8);
+        output
+    }
+
+    /// Convert a big-endian representation of the secret key.
+    pub fn from_be_bytes(bytes: &[u8]) -> CtOption<Self> {
+        let t = match Bls12381::try_from(bytes[0]) {
+            Ok(t) => t,
+            Err(_) => return CtOption::new(Self::default(), Choice::from(0u8)),
+        };
+        match (&bytes[1..]).try_into() {
+            Ok(sk) => match t {
+                Bls12381::G1 => {
+                    let ct_sk = SecretKey::from_be_bytes(&sk);
+                    let choice = ct_sk.is_some();
+                    let val = if choice.into() {
+                        SecretKeyEnum::G1(ct_sk.unwrap())
+                    } else {
+                        Self::default()
+                    };
+                    CtOption::new(val, choice)
+                }
+                Bls12381::G2 => {
+                    let ct_sk = SecretKey::from_be_bytes(&sk);
+                    let choice = ct_sk.is_some();
+                    let val = if choice.into() {
+                        SecretKeyEnum::G2(ct_sk.unwrap())
+                    } else {
+                        Self::default()
+                    };
+                    CtOption::new(val, choice)
+                }
+            },
+            Err(_) => CtOption::new(Self::default(), Choice::from(0u8)),
+        }
+    }
+
+    /// Convert a little-endian representation of the secret key.
+    pub fn from_le_bytes(bytes: &[u8]) -> CtOption<Self> {
+        let t = match Bls12381::try_from(bytes[0]) {
+            Ok(t) => t,
+            Err(_) => return CtOption::new(Self::default(), Choice::from(0u8)),
+        };
+        match (&bytes[1..]).try_into() {
+            Ok(sk) => match t {
+                Bls12381::G1 => {
+                    let ct_sk = SecretKey::from_le_bytes(&sk);
+                    let choice = ct_sk.is_some();
+                    let val = if choice.into() {
+                        SecretKeyEnum::G1(ct_sk.unwrap())
+                    } else {
+                        Self::default()
+                    };
+                    CtOption::new(val, choice)
+                }
+                Bls12381::G2 => {
+                    let ct_sk = SecretKey::from_le_bytes(&sk);
+                    let choice = ct_sk.is_some();
+                    let val = if choice.into() {
+                        SecretKeyEnum::G2(ct_sk.unwrap())
+                    } else {
+                        Self::default()
+                    };
+                    CtOption::new(val, choice)
+                }
+            },
+            Err(_) => CtOption::new(Self::default(), Choice::from(0u8)),
+        }
+    }
+}
 
 /// The secret key is field element 0 < `x` < `r`
 /// where `r` is the curve order. See Section 4.3 in
@@ -32,7 +245,7 @@ impl<'a, C: BlsSignatureImpl> From<&'a SecretKey<C>> for [u8; SECRET_KEY_BYTES] 
     }
 }
 
-impl_from_derivatives!(SecretKey);
+impl_from_derivatives_generic!(SecretKey);
 
 impl<C: BlsSignatureImpl> From<&SecretKey<C>> for Vec<u8> {
     fn from(value: &SecretKey<C>) -> Self {

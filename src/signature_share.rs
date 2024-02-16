@@ -64,7 +64,7 @@ impl<C: BlsSignatureImpl> subtle::ConditionallySelectable for SignatureShare<C> 
     }
 }
 
-impl_from_derivatives!(SignatureShare);
+impl_from_derivatives_generic!(SignatureShare);
 
 impl<C: BlsSignatureImpl> From<&SignatureShare<C>> for Vec<u8> {
     fn from(s: &SignatureShare<C>) -> Self {
