@@ -5,10 +5,13 @@
 ![Apache 2.0/MIT Licensed][license-image]
 
 The blissful crate provides a production ready BLS signature implementation.
-That being said please note
 
-- **This implementation has not been reviewed or audited yet. Use at your own risk**
-- All operations are constant time unless explicity noted.
+## Security Notes
+
+This crate has received one security audit from Kudelski Security, with no significant findings. The audit report can be found [here]() (Pending release).
+We'd like to thank [LIT Protocol](https://www.litprotocol.com/) for sponsoring this audit.
+
+All operations are constant time unless explicity noted.
 
 # [Documentation](https://docs.rs/blsful)
 BLS signatures offer the smallest known signature size as well as other benefits like one round threshold signing and signature aggregation.
