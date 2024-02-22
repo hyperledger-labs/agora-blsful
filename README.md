@@ -8,7 +8,7 @@ The blissful crate provides a production ready BLS signature implementation.
 
 ## Security Notes
 
-This crate has received one security audit from Kudelski Security, with no significant findings. The audit report can be found [here]() (Pending release).
+This crate has received one security audit from Kudelski Security, with no significant findings. The audit report can be found [here](./audit/2024-15-02_LitProtoco_Crypto_Libraries_v1.1.pdf).
 We'd like to thank [LIT Protocol](https://www.litprotocol.com/) for sponsoring this audit.
 
 All operations are constant time unless explicity noted.
