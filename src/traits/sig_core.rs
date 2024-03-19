@@ -32,7 +32,9 @@ pub trait BlsSignatureCore:
         let pk_bytes = pk.to_bytes();
         let mut pk_share = Self::PublicKeyShare::empty_share_with_capacity(pk_bytes.as_ref().len());
         *pk_share.identifier_mut() = sks.identifier();
-        pk_share.value_mut().copy_from_slice(pk_bytes.as_ref());
+        pk_share
+            .value_mut(pk_bytes.as_ref())
+            .map_err(|_| BlsError::VsssError)?;
         Ok(pk_share)
     }
 
@@ -72,7 +74,9 @@ pub trait BlsSignatureCore:
         let mut sig_share =
             <Self as Pairing>::SignatureShare::empty_share_with_capacity(sig_bytes.as_ref().len());
         *sig_share.identifier_mut() = sks.identifier();
-        sig_share.value_mut().copy_from_slice(sig_bytes.as_ref());
+        sig_share
+            .value_mut(sig_bytes.as_ref())
+            .map_err(|_| BlsError::VsssError)?;
         Ok(sig_share)
     }
 

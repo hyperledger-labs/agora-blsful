@@ -73,7 +73,7 @@ pub use vsss_rs;
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use subtle::Choice;
-use vsss_rs::Share;
+use vsss_rs::{Share, VsssResult};
 use zeroize::Zeroize;
 
 /// The share type for points in G1
@@ -152,19 +152,23 @@ impl Share for InnerPointShareG1 {
     }
 
     fn identifier(&self) -> Self::Identifier {
-        self.0[0]
+        self.0.identifier()
     }
 
     fn identifier_mut(&mut self) -> &mut Self::Identifier {
-        &mut self.0[0]
+        self.0.identifier_mut()
     }
 
-    fn value(&self) -> &[u8] {
-        &self.0[1..]
+    fn is_zero(&self) -> Choice {
+        self.0.is_zero()
     }
 
-    fn value_mut(&mut self) -> &mut [u8] {
-        &mut self.0[1..]
+    fn value(&self, buffer: &mut [u8]) -> VsssResult<()> {
+        self.0.value(buffer)
+    }
+
+    fn value_mut(&mut self, buffer: &[u8]) -> VsssResult<()> {
+        self.0.value_mut(buffer)
     }
 }
 
@@ -243,18 +247,22 @@ impl Share for InnerPointShareG2 {
     }
 
     fn identifier(&self) -> Self::Identifier {
-        self.0[0]
+        self.0.identifier()
     }
 
     fn identifier_mut(&mut self) -> &mut Self::Identifier {
-        &mut self.0[0]
+        self.0.identifier_mut()
     }
 
-    fn value(&self) -> &[u8] {
-        &self.0[1..]
+    fn is_zero(&self) -> Choice {
+        self.0.is_zero()
     }
 
-    fn value_mut(&mut self) -> &mut [u8] {
-        &mut self.0[1..]
+    fn value(&self, buffer: &mut [u8]) -> VsssResult<()> {
+        self.0.value(buffer)
+    }
+
+    fn value_mut(&mut self, buffer: &[u8]) -> VsssResult<()> {
+        self.0.value_mut(buffer)
     }
 }
