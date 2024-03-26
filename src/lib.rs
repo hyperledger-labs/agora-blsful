@@ -170,6 +170,10 @@ impl Share for InnerPointShareG1 {
     fn value_mut(&mut self, buffer: &[u8]) -> VsssResult<()> {
         self.0.value_mut(buffer)
     }
+
+    fn value_vec(&self) -> Vec<u8> {
+        self.0.to_vec()
+    }
 }
 
 /// The share type for points in G2
@@ -264,5 +268,9 @@ impl Share for InnerPointShareG2 {
 
     fn value_mut(&mut self, buffer: &[u8]) -> VsssResult<()> {
         self.0.value_mut(buffer)
+    }
+
+    fn value_vec(&self) -> Vec<u8> {
+        self.0.to_vec()
     }
 }
