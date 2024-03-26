@@ -172,7 +172,7 @@ impl Share for InnerPointShareG1 {
     }
 
     fn value_vec(&self) -> Vec<u8> {
-        self.0.to_vec()
+        self.0.value_vec()
     }
 }
 
@@ -271,6 +271,6 @@ impl Share for InnerPointShareG2 {
     }
 
     fn value_vec(&self) -> Vec<u8> {
-        self.0.to_vec()
+        self.0.value_vec()
     }
 }
