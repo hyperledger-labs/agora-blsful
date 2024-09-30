@@ -13,12 +13,12 @@ pub enum SignatureShare<C: BlsSignatureImpl> {
 
 impl<C: BlsSignatureImpl> Default for SignatureShare<C> {
     fn default() -> Self {
-        Self::ProofOfPossession(<C as Pairing>::SignatureShare::empty_share_with_capacity(0))
+        Self::ProofOfPossession(<C as Pairing>::SignatureShare::default())
     }
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Display for SignatureShare<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> Display for SignatureShare<C> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
             Self::Basic(s) => write!(f, "Basic({})", s),
             Self::MessageAugmentation(s) => write!(f, "MessageAugmentation({})", s),
@@ -27,8 +27,8 @@ impl<C: BlsSignatureImpl> core::fmt::Display for SignatureShare<C> {
     }
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Debug for SignatureShare<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> fmt::Debug for SignatureShare<C> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
             Self::Basic(s) => write!(f, "Basic({:?})", s),
             Self::MessageAugmentation(s) => write!(f, "MessageAugmentation({:?})", s),

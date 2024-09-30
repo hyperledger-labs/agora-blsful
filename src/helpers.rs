@@ -115,35 +115,16 @@ pub mod fixed_arr {
     use core::fmt::{self, Formatter};
     use serde::{
         de::{self, SeqAccess, Visitor},
-        ser::SerializeTuple,
-        Deserialize, Deserializer, Serialize, Serializer,
+        Deserialize, Deserializer,
     };
 
     pub trait BigArray<'de>: Sized {
-        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer;
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where
             D: Deserializer<'de>;
     }
 
     impl<'de, const N: usize> BigArray<'de> for [u8; N] {
-        fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
-        {
-            if s.is_human_readable() {
-                hex::encode(self).serialize(s)
-            } else {
-                let mut tupler = s.serialize_tuple(self.len())?;
-                for b in self {
-                    tupler.serialize_element(&b)?;
-                }
-                tupler.end()
-            }
-        }
-
         fn deserialize<D>(d: D) -> Result<Self, D::Error>
         where
             D: Deserializer<'de>,

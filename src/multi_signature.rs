@@ -30,8 +30,8 @@ impl<C: BlsSignatureImpl> Default for MultiSignature<C> {
     }
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Display for MultiSignature<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> Display for MultiSignature<C> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
             Self::Basic(s) => write!(f, "Basic({})", s),
             Self::MessageAugmentation(s) => write!(f, "MessageAugmentation({})", s),
@@ -40,8 +40,8 @@ impl<C: BlsSignatureImpl> core::fmt::Display for MultiSignature<C> {
     }
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Debug for MultiSignature<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> fmt::Debug for MultiSignature<C> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
             Self::Basic(s) => write!(f, "Basic({:?})", s),
             Self::MessageAugmentation(s) => write!(f, "MessageAugmentation({:?})", s),

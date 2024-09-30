@@ -18,8 +18,8 @@ pub struct SignCryptCiphertext<C: BlsSignatureImpl> {
     pub scheme: SignatureSchemes,
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Display for SignCryptCiphertext<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> Display for SignCryptCiphertext<C> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{{ u: {}, v: {:?}, w: {}, scheme: {:?} }}",
@@ -110,8 +110,8 @@ pub struct SignCryptDecryptionKey<C: BlsSignatureImpl>(
     pub <C as Pairing>::PublicKey,
 );
 
-impl<C: BlsSignatureImpl> core::fmt::Debug for SignCryptDecryptionKey<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> fmt::Debug for SignCryptDecryptionKey<C> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(f, "{:?}", self.0)
     }
 }

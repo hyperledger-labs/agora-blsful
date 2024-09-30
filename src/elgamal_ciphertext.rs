@@ -14,14 +14,14 @@ pub struct ElGamalCiphertext<C: BlsSignatureImpl> {
     pub c2: <C as Pairing>::PublicKey,
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Display for ElGamalCiphertext<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> Display for ElGamalCiphertext<C> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(f, "{{c1: {}, c2: {}}}", self.c1, self.c2)
     }
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Debug for ElGamalCiphertext<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> fmt::Debug for ElGamalCiphertext<C> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(
             f,
             "ElGamalCiphertext{{c1: {:?}, c2: {:?}}}",

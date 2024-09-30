@@ -1,6 +1,6 @@
 use crate::impls::inner_types::*;
 use crate::*;
-use vsss_rs::{combine_shares_group, Share};
+use vsss_rs::*;
 
 /// The core methods used by BLS signatures
 pub trait BlsSignatureCore:
@@ -27,14 +27,10 @@ pub trait BlsSignatureCore:
         sks: &Self::SecretKeyShare,
         generator: Self::PublicKey,
     ) -> BlsResult<Self::PublicKeyShare> {
-        let sk = sks.as_field_element::<<Self::PublicKey as Group>::Scalar>()?;
-        let pk: Self::PublicKey = generator * sk;
-        let pk_bytes = pk.to_bytes();
-        let mut pk_share = Self::PublicKeyShare::empty_share_with_capacity(pk_bytes.as_ref().len());
-        *pk_share.identifier_mut() = sks.identifier();
-        pk_share
-            .value_mut(pk_bytes.as_ref())
-            .map_err(|_| BlsError::VsssError)?;
+        let sk = *sks.value();
+        let pk: Self::PublicKey = generator * sk.0;
+        let pk_share =
+            Self::PublicKeyShare::with_identifier_and_value(*sks.identifier(), GroupElement(pk));
         Ok(pk_share)
     }
 
@@ -68,15 +64,10 @@ pub trait BlsSignatureCore:
         msg: B,
         dst: C,
     ) -> BlsResult<Self::SignatureShare> {
-        let sk = sks.as_field_element()?;
-        let sig = <Self as BlsSignatureCore>::core_sign(&sk, msg, dst.as_ref())?;
-        let sig_bytes = sig.to_bytes();
-        let mut sig_share =
-            <Self as Pairing>::SignatureShare::empty_share_with_capacity(sig_bytes.as_ref().len());
-        *sig_share.identifier_mut() = sks.identifier();
-        sig_share
-            .value_mut(sig_bytes.as_ref())
-            .map_err(|_| BlsError::VsssError)?;
+        let sk = *sks.value();
+        let sig = <Self as BlsSignatureCore>::core_sign(&sk.0, msg, dst.as_ref())?;
+        let sig_share =
+            Self::SignatureShare::with_identifier_and_value(*sks.identifier(), GroupElement(sig));
         Ok(sig_share)
     }
 
@@ -92,25 +83,25 @@ pub trait BlsSignatureCore:
                 "signature and public shares do not correspond".to_string(),
             ));
         }
-        let pk = pks.as_group_element()?;
-        let sig = sig.as_group_element()?;
-        Self::core_verify(pk, sig, msg, dst)
+        let pk = *pks.value();
+        let sig = *sig.value();
+        Self::core_verify(pk.0, sig.0, msg, dst)
     }
 
     /// Combine signature shares to form a signature
     fn core_combine_signature_shares(
         shares: &[Self::SignatureShare],
     ) -> BlsResult<Self::Signature> {
-        let sig = combine_shares_group(shares)?;
-        Ok(sig)
+        let sig = shares.combine()?;
+        Ok(sig.0)
     }
 
     /// Combine public key shares to form a public key
     fn core_combine_public_key_shares(
         shares: &[Self::PublicKeyShare],
     ) -> BlsResult<Self::PublicKey> {
-        let pk = combine_shares_group(shares)?;
-        Ok(pk)
+        let pk = shares.combine()?;
+        Ok(pk.0)
     }
 
     /// Compute a signature

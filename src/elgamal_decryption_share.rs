@@ -16,8 +16,8 @@ impl<C: BlsSignatureImpl> Clone for ElGamalDecryptionShare<C> {
     }
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Debug for ElGamalDecryptionShare<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> fmt::Debug for ElGamalDecryptionShare<C> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}", self.0)
     }
 }

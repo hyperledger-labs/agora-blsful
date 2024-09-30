@@ -26,8 +26,8 @@ impl<C: BlsSignatureImpl> subtle::ConditionallySelectable for PublicKeyShare<C> 
     }
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Display for PublicKeyShare<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> Display for PublicKeyShare<C> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)
     }
 }
@@ -52,19 +52,19 @@ impl<C: BlsSignatureImpl> TryFrom<&[u8]> for PublicKeyShare<C> {
 impl<C: BlsSignatureImpl> PublicKeyShare<C> {
     /// Verify the signature share with the public key share
     pub fn verify<B: AsRef<[u8]>>(&self, sig: &SignatureShare<C>, msg: B) -> BlsResult<()> {
-        let pk = self.0.as_group_element::<<C as Pairing>::PublicKey>()?;
+        let pk = *self.0.value();
         match sig {
             SignatureShare::Basic(sig) => {
-                let sig = sig.as_group_element::<<C as Pairing>::Signature>()?;
-                <C as BlsSignatureBasic>::verify(pk, sig, msg)
+                let sig = *sig.value();
+                <C as BlsSignatureBasic>::verify(pk.0, sig.0, msg)
             }
             SignatureShare::MessageAugmentation(sig) => {
-                let sig = sig.as_group_element::<<C as Pairing>::Signature>()?;
-                <C as BlsSignatureMessageAugmentation>::verify(pk, sig, msg)
+                let sig = *sig.value();
+                <C as BlsSignatureMessageAugmentation>::verify(pk.0, sig.0, msg)
             }
             SignatureShare::ProofOfPossession(sig) => {
-                let sig = sig.as_group_element::<<C as Pairing>::Signature>()?;
-                <C as BlsSignaturePop>::verify(pk, sig, msg)
+                let sig = *sig.value();
+                <C as BlsSignaturePop>::verify(pk.0, sig.0, msg)
             }
         }
     }

@@ -3,17 +3,23 @@ use core::fmt::Display;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use subtle::ConditionallySelectable;
-use vsss_rs::Share;
+use vsss_rs::*;
 
 /// Operations that support pairing trait
 pub trait Pairing {
     /// The secret key share
-    type SecretKeyShare: Share<Identifier = u8> + core::fmt::Debug;
+    type SecretKeyShare: Share<
+            Identifier = IdentifierPrimeField<<Self::PublicKey as Group>::Scalar>,
+            Value = IdentifierPrimeField<<Self::PublicKey as Group>::Scalar>,
+        > + core::fmt::Debug
+        + DeserializeOwned;
     /// The public key group
     type PublicKey: Group + GroupEncoding + Default + Display + ConditionallySelectable;
     /// The public key share
-    type PublicKeyShare: Share<Identifier = u8>
-        + Copy
+    type PublicKeyShare: Share<
+            Identifier = IdentifierPrimeField<<Self::PublicKey as Group>::Scalar>,
+            Value = GroupElement<Self::PublicKey>,
+        > + Copy
         + Display
         + core::fmt::Debug
         + ConditionallySelectable
@@ -26,8 +32,10 @@ pub trait Pairing {
         + Display
         + ConditionallySelectable;
     /// The signature share
-    type SignatureShare: Share<Identifier = u8>
-        + Copy
+    type SignatureShare: Share<
+            Identifier = IdentifierPrimeField<<Self::Signature as Group>::Scalar>,
+            Value = GroupElement<Self::Signature>,
+        > + Copy
         + Display
         + core::fmt::Debug
         + ConditionallySelectable

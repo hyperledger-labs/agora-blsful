@@ -1,6 +1,7 @@
 use crate::impls::inner_types::*;
 use crate::*;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use vsss_rs::*;
 
 /// Represents BLS signatures on the BLS12-381 curve where
 /// Signatures are in G1 and Public Keys are in G2 or
@@ -27,7 +28,7 @@ impl HashToScalar for Bls12381G1Impl {
 }
 
 impl Pairing for Bls12381G1Impl {
-    type SecretKeyShare = [u8; 33];
+    type SecretKeyShare = DefaultShare<IdentifierPrimeField<Scalar>, IdentifierPrimeField<Scalar>>;
     type PublicKey = G2Projective;
     type PublicKeyShare = InnerPointShareG2;
     type Signature = G1Projective;
@@ -48,7 +49,7 @@ impl BlsSerde for Bls12381G1Impl {
         share: &Self::SecretKeyShare,
         serializer: S,
     ) -> Result<S::Ok, S::Error> {
-        fixed_arr::BigArray::serialize(share, serializer)
+        share.serialize(serializer)
     }
 
     fn serialize_signature<S: Serializer>(
@@ -81,7 +82,7 @@ impl BlsSerde for Bls12381G1Impl {
     fn deserialize_scalar_share<'de, D: Deserializer<'de>>(
         deserializer: D,
     ) -> Result<Self::SecretKeyShare, D::Error> {
-        fixed_arr::BigArray::deserialize(deserializer)
+        Self::SecretKeyShare::deserialize(deserializer)
     }
 
     fn deserialize_signature<'de, D: Deserializer<'de>>(

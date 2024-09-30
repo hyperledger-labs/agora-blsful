@@ -24,8 +24,8 @@ pub struct ElGamalProof<C: BlsSignatureImpl> {
     pub challenge: <<C as Pairing>::PublicKey as Group>::Scalar,
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Display for ElGamalProof<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> Display for ElGamalProof<C> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(
             f,
             "{{ciphertext: {}, message_proof: {:?}, blinder_proof: {:?}, challenge: {:?}}}",
@@ -34,8 +34,8 @@ impl<C: BlsSignatureImpl> core::fmt::Display for ElGamalProof<C> {
     }
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Debug for ElGamalProof<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> fmt::Debug for ElGamalProof<C> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(
             f,
             "{{ciphertext: {:?}, message_proof: {:?}, blinder_proof: {:?}, challenge: {:?}}}",

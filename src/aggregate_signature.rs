@@ -30,8 +30,8 @@ impl<C: BlsSignatureImpl> Default for AggregateSignature<C> {
     }
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Display for AggregateSignature<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> Display for AggregateSignature<C> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
             Self::Basic(s) => write!(f, "Basic({})", s),
             Self::MessageAugmentation(s) => write!(f, "MessageAugmentation({})", s),
@@ -40,8 +40,8 @@ impl<C: BlsSignatureImpl> core::fmt::Display for AggregateSignature<C> {
     }
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Debug for AggregateSignature<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> fmt::Debug for AggregateSignature<C> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
             Self::Basic(s) => write!(f, "Basic({:?})", s),
             Self::MessageAugmentation(s) => write!(f, "MessageAugmentation({:?})", s),

@@ -6,7 +6,7 @@ use rand::Rng;
 use rand_core::{CryptoRng, RngCore};
 use serde::de::{SeqAccess, Visitor};
 use subtle::CtOption;
-use vsss_rs::{combine_shares, shamir};
+use vsss_rs::*;
 
 /// Number of bytes needed to represent the secret key
 pub const SECRET_KEY_BYTES: usize = 32;
@@ -320,18 +320,20 @@ impl<C: BlsSignatureImpl> SecretKey<C> {
         limit: usize,
         rng: impl RngCore + CryptoRng,
     ) -> BlsResult<Vec<SecretKeyShare<C>>> {
-        let shares = shamir::split_secret(threshold, limit, self.0, rng)?
-            .into_iter()
-            .map(SecretKeyShare)
-            .collect::<Vec<_>>();
+        let secret = IdentifierPrimeField(self.0);
+        let shares =
+            shamir::split_secret::<<C as Pairing>::SecretKeyShare>(threshold, limit, &secret, rng)?
+                .into_iter()
+                .map(SecretKeyShare)
+                .collect::<Vec<_>>();
         Ok(shares)
     }
 
     /// Reconstruct a secret from shares created from `split`
     pub fn combine(shares: &[SecretKeyShare<C>]) -> BlsResult<Self> {
         let ss = shares.iter().map(|s| s.0.clone()).collect::<Vec<_>>();
-        let secret = combine_shares(&ss)?;
-        Ok(Self(secret))
+        let secret = ss.combine()?;
+        Ok(Self(secret.0))
     }
 
     /// Compute the public key

@@ -15,8 +15,8 @@ impl<C: BlsSignatureImpl> Clone for SignDecryptionShare<C> {
     }
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Debug for SignDecryptionShare<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> fmt::Debug for SignDecryptionShare<C> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}", self.0)
     }
 }
@@ -41,11 +41,11 @@ impl_from_derivatives_generic!(SignDecryptionShare);
 impl<C: BlsSignatureImpl> SignDecryptionShare<C> {
     /// Verify the signcrypt decryption share with the corresponding public key and ciphertext
     pub fn verify(&self, pks: &PublicKeyShare<C>, sig: &SignCryptCiphertext<C>) -> BlsResult<()> {
-        let share = self.0.as_group_element::<<C as Pairing>::PublicKey>()?;
-        let pk = pks.0.as_group_element::<<C as Pairing>::PublicKey>()?;
+        let share = *self.0.value();
+        let pk = *pks.0.value();
         if <C as BlsSignCrypt>::verify_share(
-            share,
-            pk,
+            share.0,
+            pk.0,
             sig.u,
             &sig.v,
             sig.w,

@@ -10,14 +10,14 @@ pub struct MultiPublicKey<C: BlsSignatureImpl>(
     pub <C as Pairing>::PublicKey,
 );
 
-impl<C: BlsSignatureImpl> core::fmt::Display for MultiPublicKey<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> Display for MultiPublicKey<C> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(f, "{}", self.0)
     }
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Debug for MultiPublicKey<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> fmt::Debug for MultiPublicKey<C> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(f, "{:?}", self.0)
     }
 }

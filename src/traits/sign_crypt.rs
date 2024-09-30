@@ -8,7 +8,7 @@ use sha3::{
     Shake128,
 };
 use subtle::{Choice, ConditionallySelectable, CtOption};
-use vsss_rs::{combine_shares_group, Share};
+use vsss_rs::*;
 
 /// The methods for implementing SignCryption
 /// as described in
@@ -19,6 +19,18 @@ pub trait BlsSignCrypt:
     + HashToScalar<Output = <Self::Signature as Group>::Scalar>
 {
     /// Create a new ciphertext
+    /// The math is as follows
+    ///
+    /// 1. r ← Zq
+    /// 2. U = P^r
+    /// 3. G = K^r
+    /// 4. V = HℓX(G) ⊕ M
+    /// 5. W = HG(U || V)^r
+    ///
+    /// The ciphertext is (U, V, W)
+    /// where U is in the signature group
+    /// V is the encrypted message
+    /// W is the in the public key group
     fn seal<B: AsRef<[u8]>>(
         pk: Self::PublicKey,
         message: B,
@@ -42,13 +54,18 @@ pub trait BlsSignCrypt:
             overhead_bytes.push(0u8);
         }
         let v = Self::compute_v(pk * r, overhead_bytes.as_slice());
-        // W = HG2(U′ || V)^r
+        // W = HG(U′ || V)^r
         let w = Self::compute_w(u, v.as_slice(), dst) * r;
         debug_assert_eq!(w.is_identity().unwrap_u8(), 0u8);
         (u, v, w)
     }
 
     /// Check if the ciphertext is valid
+    ///
+    /// The math is as follows
+    /// 1. Compute W' = HG(U || V)
+    /// 2. Check no inputs are the infinity point
+    /// 3. Check if e(W, P) = e(W', U)
     fn valid(u: Self::PublicKey, v: &[u8], w: Self::Signature, dst: &[u8]) -> Choice {
         let w_tick = Self::compute_w(u, v, dst);
         debug_assert_eq!(w_tick.is_identity().unwrap_u8(), 0u8);
@@ -60,6 +77,11 @@ pub trait BlsSignCrypt:
     }
 
     /// Open a ciphertext if the secret can verify the signature
+    ///
+    /// The steps are
+    /// 1. Verify the ciphertext is valid
+    /// 2. G = U^sk
+    /// 4. m = HℓX(G) ⊕ V
     fn unseal(
         u: Self::PublicKey,
         v: &[u8],
@@ -77,6 +99,10 @@ pub trait BlsSignCrypt:
     }
 
     /// Open the ciphertext given the decryption shares.
+    ///
+    /// The math is as follows
+    /// 1. Compute G = Σ λ(i) U_i
+    /// 2. m = HℓX(G) ⊕ V
     fn unseal_with_shares(
         u: Self::PublicKey,
         v: &[u8],
@@ -88,8 +114,8 @@ pub trait BlsSignCrypt:
         if shares.len() < 2 {
             return CtOption::new(vec![], 0u8.into());
         }
-        let ua = combine_shares_group(shares).ok().unwrap_or_default();
-        Self::decrypt(v, ua, Self::valid(u, v, w, dst))
+        let ua = shares.combine().unwrap_or_default();
+        Self::decrypt(v, ua.0, Self::valid(u, v, w, dst))
     }
 
     /// Decrypt a ciphertext
@@ -134,11 +160,14 @@ pub trait BlsSignCrypt:
     }
 
     /// Create a sign crypt decryption share
+    ///
+    /// The math is as follows
+    /// 1. sig = u * sks
     fn create_decryption_share(
         share: &Self::SecretKeyShare,
         u: Self::PublicKey,
-    ) -> BlsResult<Self::SignatureShare> {
-        let sk = share.as_field_element::<<Self::PublicKey as Group>::Scalar>()?;
+    ) -> BlsResult<Self::PublicKeyShare> {
+        let sk = *share.value();
         if sk.is_zero().into() {
             return Err(BlsError::InvalidInputs("share is zero".to_string()));
         }
@@ -147,19 +176,19 @@ pub trait BlsSignCrypt:
                 "invalid ciphertext. Contains an identity point".to_string(),
             ));
         }
-        let sig = u * sk;
+        let sig = u * sk.0;
         debug_assert_eq!(sig.is_identity().unwrap_u8(), 0u8);
-        let sig_bytes = sig.to_bytes();
-        let mut sig_share =
-            <Self as Pairing>::SignatureShare::empty_share_with_capacity(sig_bytes.as_ref().len());
-        *sig_share.identifier_mut() = share.identifier();
-        sig_share
-            .value_mut(sig_bytes.as_ref())
-            .map_err(|_| BlsError::VsssError)?;
+        let sig_share =
+            Self::PublicKeyShare::with_identifier_and_value(*share.identifier(), GroupElement(sig));
         Ok(sig_share)
     }
 
     /// Verify a decryption share using a public key share and ciphertext
+    ///
+    /// The math is as follows
+    /// 1. Compute W' = HG(U || V)
+    /// 2. Check no inputs are the infinity point
+    /// 3. Check if e(W', K') = e(W, K)
     fn verify_share(
         share: Self::PublicKey,
         pk: Self::PublicKey,
