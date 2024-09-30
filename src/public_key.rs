@@ -16,14 +16,14 @@ impl<C: BlsSignatureImpl> From<&SecretKey<C>> for PublicKey<C> {
     }
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Display for PublicKey<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> Display for PublicKey<C> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(f, "{}", self.0)
     }
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Debug for PublicKey<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> fmt::Debug for PublicKey<C> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(f, "{:?}", self.0)
     }
 }

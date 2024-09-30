@@ -1,5 +1,8 @@
 mod utils;
-use blsful::*;
+use blsful::{
+    AggregateSignature, Bls12381G1, Bls12381G1Impl, Bls12381G2, Bls12381G2Impl, BlsSignatureImpl,
+    MultiPublicKey, MultiSignature, PublicKey, SecretKey, Signature, SignatureSchemes,
+};
 use rstest::*;
 use utils::*;
 

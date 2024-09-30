@@ -111,8 +111,8 @@ fn time_lock_works_g1() {
 }
 
 #[rstest]
-#[case::Basic(SignatureSchemes::Basic)]
-#[case::ProofOfPossession(SignatureSchemes::ProofOfPossession)]
+#[case::basic(SignatureSchemes::Basic)]
+#[case::proof_of_possession(SignatureSchemes::ProofOfPossession)]
 fn time_lock_all_schemes(#[case] scheme: SignatureSchemes) {
     let sk = Bls12381G2::new_secret_key();
     let pk = sk.public_key();

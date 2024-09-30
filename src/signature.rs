@@ -30,8 +30,8 @@ impl<C: BlsSignatureImpl> Default for Signature<C> {
     }
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Display for Signature<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> Display for Signature<C> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
             Self::Basic(s) => write!(f, "Basic({})", s),
             Self::MessageAugmentation(s) => write!(f, "MessageAugmentation({})", s),
@@ -40,8 +40,8 @@ impl<C: BlsSignatureImpl> core::fmt::Display for Signature<C> {
     }
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Debug for Signature<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> fmt::Debug for Signature<C> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
             Self::Basic(s) => write!(f, "Basic({:?})", s),
             Self::MessageAugmentation(s) => write!(f, "MessageAugmentation({:?})", s),
@@ -150,7 +150,7 @@ mod tests {
     #[rstest]
     #[case::g1(Bls12381G1Impl, 49)]
     #[case::g2(Bls12381G2Impl, 97)]
-    fn try_from<C: BlsSignatureImpl + PartialEq + Eq + std::fmt::Debug>(
+    fn try_from<C: BlsSignatureImpl + PartialEq + Eq + fmt::Debug>(
         #[case] _c: C,
         #[case] expected_len: usize,
     ) {

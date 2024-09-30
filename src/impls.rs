@@ -184,17 +184,30 @@ impl<'de> Deserialize<'de> for Bls12381 {
 pub mod inner_types {
     #[cfg(not(feature = "blst"))]
     pub use bls12_381_plus::{
-        elliptic_curve::hash2curve::{ExpandMsgXmd, ExpandMsgXof},
-        ff::{Field, PrimeField},
-        group::{Curve, Group, GroupEncoding},
-        *,
+        elliptic_curve::hash2curve::{
+            ExpandMsg, ExpandMsgXmd, ExpandMsgXof, Expander, ExpanderXmd,
+        },
+        ff::{Field, FieldBits, FromUniformBytes, PrimeField, PrimeFieldBits},
+        group::{
+            cofactor::*, prime::*, Curve, Group, GroupEncoding, GroupOps, GroupOpsOwned, ScalarMul,
+            ScalarMulOwned, UncompressedEncoding,
+        },
+        multi_miller_loop, pairing, G1Affine, G1Compressed, G1Projective, G2Affine, G2Compressed,
+        G2Prepared, G2Projective, Gt, MillerLoopResult, Scalar, ScalarLe,
     };
     #[cfg(feature = "blst")]
     pub use blstrs_plus::{
-        elliptic_curve::hash2curve::{ExpandMsgXmd, ExpandMsgXof},
-        ff::{Field, PrimeField},
-        group::{Curve, Group, GroupEncoding},
-        pairing_lib::{MillerLoopResult, MultiMillerLoop},
-        *,
+        elliptic_curve::hash2curve::{
+            ExpandMsg, ExpandMsgXmd, ExpandMsgXof, Expander, ExpanderXmd,
+        },
+        ff::{Field, FieldBits, FromUniformBytes, PrimeField, PrimeFieldBits},
+        group::{
+            cofactor::*, prime::*, Curve, Group, GroupEncoding, GroupOps, GroupOpsOwned, ScalarMul,
+            ScalarMulOwned, UncompressedEncoding,
+        },
+        multi_miller_loop, pairing,
+        pairing_lib::{Engine, MillerLoopResult, MultiMillerLoop, PairingCurveAffine},
+        G1Affine, G1Compressed, G1Projective, G2Affine, G2Compressed, G2Prepared, G2Projective, Gt,
+        Scalar,
     };
 }

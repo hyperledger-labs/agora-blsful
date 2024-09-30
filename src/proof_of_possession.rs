@@ -1,4 +1,3 @@
-use crate::inner_types::*;
 use crate::*;
 use subtle::{Choice, ConditionallySelectable};
 
@@ -17,14 +16,14 @@ impl<C: BlsSignatureImpl> Default for ProofOfPossession<C> {
     }
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Display for ProofOfPossession<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> Display for ProofOfPossession<C> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)
     }
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Debug for ProofOfPossession<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> fmt::Debug for ProofOfPossession<C> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "ProofOfPossession{{ {:?} }}", self.0)
     }
 }

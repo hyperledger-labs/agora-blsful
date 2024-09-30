@@ -68,4 +68,27 @@ impl<C: BlsSignatureImpl> SecretKeyShare<C> {
     pub fn as_raw_value(&self) -> &<C as Pairing>::SecretKeyShare {
         &self.0
     }
+
+    /// Convert secret share from SecretKeyShare v1 to the newer v2 format
+    pub fn from_v1_bytes(bytes: &[u8]) -> BlsResult<Self> {
+        #[derive(Deserialize)]
+        struct V1(#[serde(deserialize_with = "fixed_arr::BigArray::deserialize")] [u8; 33]);
+        let v1 = serde_bare::from_slice::<V1>(bytes)
+            .map_err(|e| BlsError::InvalidInputs(e.to_string()))?;
+
+        let identifier = IdentifierPrimeField(<<C as Pairing>::PublicKey as Group>::Scalar::from(
+            v1.0[0] as u64,
+        ));
+        let mut repr =
+            <<<C as Pairing>::PublicKey as Group>::Scalar as PrimeField>::Repr::default();
+        repr.as_mut().copy_from_slice(&v1.0[1..]);
+        let inner_value = Option::<<<C as Pairing>::PublicKey as Group>::Scalar>::from(
+            <<C as Pairing>::PublicKey as Group>::Scalar::from_repr(repr),
+        )
+        .ok_or_else(|| BlsError::InvalidInputs("Invalid scalar".to_string()))?;
+        let value = IdentifierPrimeField(inner_value);
+        Ok(Self(C::SecretKeyShare::with_identifier_and_value(
+            identifier, value,
+        )))
+    }
 }

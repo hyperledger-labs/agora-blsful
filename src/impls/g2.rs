@@ -26,7 +26,7 @@ impl HashToScalar for Bls12381G2Impl {
 }
 
 impl Pairing for Bls12381G2Impl {
-    type SecretKeyShare = [u8; 33];
+    type SecretKeyShare = (IdentifierPrimeField<Scalar>, IdentifierPrimeField<Scalar>);
     type PublicKey = G1Projective;
     type PublicKeyShare = InnerPointShareG1;
     type Signature = G2Projective;
@@ -47,7 +47,7 @@ impl BlsSerde for Bls12381G2Impl {
         share: &Self::SecretKeyShare,
         serializer: S,
     ) -> Result<S::Ok, S::Error> {
-        fixed_arr::BigArray::serialize(share, serializer)
+        share.serialize(serializer)
     }
 
     fn serialize_signature<S: Serializer>(
@@ -80,7 +80,7 @@ impl BlsSerde for Bls12381G2Impl {
     fn deserialize_scalar_share<'de, D: Deserializer<'de>>(
         deserializer: D,
     ) -> Result<Self::SecretKeyShare, D::Error> {
-        fixed_arr::BigArray::deserialize(deserializer)
+        Self::SecretKeyShare::deserialize(deserializer)
     }
 
     fn deserialize_signature<'de, D: Deserializer<'de>>(

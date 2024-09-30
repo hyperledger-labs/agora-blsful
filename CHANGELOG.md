@@ -5,6 +5,12 @@ All notable changes to this crate will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v3.0.0 - 2024
+
+- Update to use vsss-rs new API
+- Shares now use `vsss_rs::DefaultShare` instead of byte sequences
+- Fix inner_types exports to not clash with other crates
+
 ## v2.5.3 - 2023-10-19
 
 - Add to and from Vec methods

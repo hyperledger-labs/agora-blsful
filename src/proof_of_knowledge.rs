@@ -48,8 +48,8 @@ impl<C: BlsSignatureImpl> Default for ProofOfKnowledge<C> {
     }
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Display for ProofOfKnowledge<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> Display for ProofOfKnowledge<C> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             Self::Basic { u, v } => write!(f, "Basic{{ u: {}, v: {} }}", u, v),
             Self::MessageAugmentation { u, v } => {
@@ -62,8 +62,8 @@ impl<C: BlsSignatureImpl> core::fmt::Display for ProofOfKnowledge<C> {
     }
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Debug for ProofOfKnowledge<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> fmt::Debug for ProofOfKnowledge<C> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             Self::Basic { u, v } => write!(f, "Basic{{ u: {:?}, v: {:?} }}", u, v),
             Self::MessageAugmentation { u, v } => {
@@ -189,8 +189,8 @@ impl<C: BlsSignatureImpl> Default for ProofOfKnowledgeTimestamp<C> {
     }
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Display for ProofOfKnowledgeTimestamp<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> Display for ProofOfKnowledgeTimestamp<C> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{{ proof: {}, timestamp: {} }}",
@@ -199,8 +199,8 @@ impl<C: BlsSignatureImpl> core::fmt::Display for ProofOfKnowledgeTimestamp<C> {
     }
 }
 
-impl<C: BlsSignatureImpl> core::fmt::Debug for ProofOfKnowledgeTimestamp<C> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+impl<C: BlsSignatureImpl> fmt::Debug for ProofOfKnowledgeTimestamp<C> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{{ proof: {:?}, timestamp: {:?} }}",
