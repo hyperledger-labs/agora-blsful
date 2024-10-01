@@ -179,7 +179,7 @@ pub trait BlsSignCrypt:
         let sig = u * sk.0;
         debug_assert_eq!(sig.is_identity().unwrap_u8(), 0u8);
         let sig_share =
-            Self::PublicKeyShare::with_identifier_and_value(*share.identifier(), GroupElement(sig));
+            Self::PublicKeyShare::with_identifier_and_value(*share.identifier(), ValueGroup(sig));
         Ok(sig_share)
     }
 

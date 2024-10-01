@@ -42,7 +42,7 @@ sha3 = { version = "0.10", default-features = false }
 subtle = { version = "2.6", default-features = false }
 thiserror = "1.0"
 uint-zigzag = { version = "0.2", features = ["std"] }
-vsss-rs = { version = "5.0.0-pre5", features = ["serde"], path = "../vsss-rs" }
+vsss-rs = { version = "5.0.0-pre9", features = ["serde"] }
 zeroize = { version = "1", features = ["zeroize_derive"] }
 
 [dev-dependencies]

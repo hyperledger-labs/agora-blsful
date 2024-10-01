@@ -30,7 +30,7 @@ pub trait BlsSignatureCore:
         let sk = *sks.value();
         let pk: Self::PublicKey = generator * sk.0;
         let pk_share =
-            Self::PublicKeyShare::with_identifier_and_value(*sks.identifier(), GroupElement(pk));
+            Self::PublicKeyShare::with_identifier_and_value(*sks.identifier(), ValueGroup(pk));
         Ok(pk_share)
     }
 
@@ -67,7 +67,7 @@ pub trait BlsSignatureCore:
         let sk = *sks.value();
         let sig = <Self as BlsSignatureCore>::core_sign(&sk.0, msg, dst.as_ref())?;
         let sig_share =
-            Self::SignatureShare::with_identifier_and_value(*sks.identifier(), GroupElement(sig));
+            Self::SignatureShare::with_identifier_and_value(*sks.identifier(), ValueGroup(sig));
         Ok(sig_share)
     }
 
