@@ -10,7 +10,7 @@ pub trait Pairing {
     /// The secret key share
     type SecretKeyShare: Share<
             Identifier = IdentifierPrimeField<<Self::PublicKey as Group>::Scalar>,
-            Value = IdentifierPrimeField<<Self::PublicKey as Group>::Scalar>,
+            Value = ValuePrimeField<<Self::PublicKey as Group>::Scalar>,
         > + core::fmt::Debug
         + DeserializeOwned;
     /// The public key group
@@ -18,7 +18,7 @@ pub trait Pairing {
     /// The public key share
     type PublicKeyShare: Share<
             Identifier = IdentifierPrimeField<<Self::PublicKey as Group>::Scalar>,
-            Value = GroupElement<Self::PublicKey>,
+            Value = ValueGroup<Self::PublicKey>,
         > + Copy
         + Display
         + core::fmt::Debug
@@ -34,7 +34,7 @@ pub trait Pairing {
     /// The signature share
     type SignatureShare: Share<
             Identifier = IdentifierPrimeField<<Self::Signature as Group>::Scalar>,
-            Value = GroupElement<Self::Signature>,
+            Value = ValueGroup<Self::Signature>,
         > + Copy
         + Display
         + core::fmt::Debug

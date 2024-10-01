@@ -78,7 +78,7 @@ use std::{
     hash::Hash,
 };
 use subtle::Choice;
-use vsss_rs::{DefaultShare, GroupElement, IdentifierPrimeField, Share};
+use vsss_rs::{DefaultShare, IdentifierPrimeField, Share, ValueGroup};
 use zeroize::DefaultIsZeroes;
 
 /// The share type for points in G1
@@ -87,7 +87,7 @@ use zeroize::DefaultIsZeroes;
 )]
 #[repr(transparent)]
 pub struct InnerPointShareG1(
-    pub DefaultShare<IdentifierPrimeField<Scalar>, GroupElement<G1Projective>>,
+    pub DefaultShare<IdentifierPrimeField<Scalar>, ValueGroup<G1Projective>>,
 );
 
 impl subtle::ConditionallySelectable for InnerPointShareG1 {
@@ -101,7 +101,7 @@ impl subtle::ConditionallySelectable for InnerPointShareG1 {
         let value = G1Affine::conditional_select(&value1, &value2, choice);
         Self(DefaultShare {
             identifier: IdentifierPrimeField(identifier),
-            value: GroupElement(G1Projective::from(value)),
+            value: ValueGroup(G1Projective::from(value)),
         })
     }
 }
@@ -139,7 +139,7 @@ impl TryFrom<&[u8]> for InnerPointShareG1 {
 
         Ok(Self(DefaultShare {
             identifier: IdentifierPrimeField(identifier),
-            value: GroupElement(value),
+            value: ValueGroup(value),
         }))
     }
 }
@@ -184,7 +184,7 @@ impl Display for InnerPointShareG1 {
 impl Share for InnerPointShareG1 {
     type Identifier = IdentifierPrimeField<Scalar>;
 
-    type Value = GroupElement<G1Projective>;
+    type Value = ValueGroup<G1Projective>;
 
     fn with_identifier_and_value(identifier: Self::Identifier, value: Self::Value) -> Self {
         Self(DefaultShare { identifier, value })
@@ -222,7 +222,7 @@ impl InnerPointShareG1 {
         })?;
         Ok(Self(DefaultShare {
             identifier,
-            value: GroupElement(value),
+            value: ValueGroup(value),
         }))
     }
 }
@@ -233,7 +233,7 @@ impl InnerPointShareG1 {
 )]
 #[repr(transparent)]
 pub struct InnerPointShareG2(
-    pub DefaultShare<IdentifierPrimeField<Scalar>, GroupElement<G2Projective>>,
+    pub DefaultShare<IdentifierPrimeField<Scalar>, ValueGroup<G2Projective>>,
 );
 
 impl DefaultIsZeroes for InnerPointShareG2 {}
@@ -248,7 +248,7 @@ impl subtle::ConditionallySelectable for InnerPointShareG2 {
         let value = G2Affine::conditional_select(&value1, &value2, choice);
         Self(DefaultShare {
             identifier: IdentifierPrimeField(identifier),
-            value: GroupElement(G2Projective::from(value)),
+            value: ValueGroup(G2Projective::from(value)),
         })
     }
 }
@@ -285,7 +285,7 @@ impl TryFrom<&[u8]> for InnerPointShareG2 {
             })?;
         Ok(Self(DefaultShare {
             identifier: IdentifierPrimeField(identifier),
-            value: GroupElement(value),
+            value: ValueGroup(value),
         }))
     }
 }
@@ -329,7 +329,7 @@ impl Display for InnerPointShareG2 {
 
 impl Share for InnerPointShareG2 {
     type Identifier = IdentifierPrimeField<Scalar>;
-    type Value = GroupElement<G2Projective>;
+    type Value = ValueGroup<G2Projective>;
 
     fn with_identifier_and_value(identifier: Self::Identifier, value: Self::Value) -> Self {
         Self(DefaultShare { identifier, value })
@@ -367,7 +367,7 @@ impl InnerPointShareG2 {
         })?;
         Ok(Self(DefaultShare {
             identifier,
-            value: GroupElement(value),
+            value: ValueGroup(value),
         }))
     }
 }
