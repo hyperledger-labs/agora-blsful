@@ -2,8 +2,9 @@ use crate::*;
 use serde::{Deserialize, Serialize};
 
 /// A secret key share is field element 0 < `x` < `r`
-/// where `r` is the curve order. See Section 4.3 in
-/// <https://eprint.iacr.org/2016/663.pdf>
+/// where `r` is the curve order.
+///
+/// See Section 4.3 in <https://eprint.iacr.org/2016/663.pdf>
 /// Must be combined with other secret key shares
 /// to produce the completed key, or used for
 /// creating partial signatures which can be

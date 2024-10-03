@@ -1,8 +1,9 @@
 use crate::*;
 use subtle::Choice;
 
-/// A public key share is point on the curve. See Section 4.3 in
-/// <https://eprint.iacr.org/2016/663.pdf>
+/// A public key share is point on the curve.
+///
+/// See Section 4.3 in <https://eprint.iacr.org/2016/663.pdf>
 /// Must be combined with other public key shares
 /// to produce the completed key, or used for
 /// creating partial signatures which can be

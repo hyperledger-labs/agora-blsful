@@ -11,7 +11,9 @@ use vsss_rs::*;
 /// Number of bytes needed to represent the secret key
 pub const SECRET_KEY_BYTES: usize = 32;
 
-/// A BLS secret key implementation that doesn't expose the underlying curve
+/// A BLS secret key implementation
+///
+/// This doesn't expose the underlying curve
 /// and signature scheme and can be used in situations where the specific
 /// implementation is not known at compile time and where trait objects
 /// are desirable but can't be used due to the lack of `Sized` trait.
