@@ -192,8 +192,8 @@ pub mod inner_types {
             cofactor::*, prime::*, Curve, Group, GroupEncoding, GroupOps, GroupOpsOwned, ScalarMul,
             ScalarMulOwned, UncompressedEncoding,
         },
-        multi_miller_loop, pairing, G1Affine, G1Compressed, G1Projective, G2Affine, G2Compressed,
-        G2Prepared, G2Projective, Gt, MillerLoopResult, Scalar, ScalarLe,
+        multi_miller_loop, pairing, G1Affine, G1Projective, G2Affine, G2Prepared, G2Projective, Gt,
+        MillerLoopResult, Scalar, ScalarLe,
     };
     #[cfg(feature = "blst")]
     pub use blstrs_plus::{
