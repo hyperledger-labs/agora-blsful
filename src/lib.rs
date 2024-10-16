@@ -99,10 +99,7 @@ impl subtle::ConditionallySelectable for InnerPointShareG1 {
 
         let identifier = Scalar::conditional_select(&identifier1, &identifier2, choice);
         let value = G1Affine::conditional_select(&value1, &value2, choice);
-        Self(DefaultShare {
-            identifier: IdentifierPrimeField(identifier),
-            value: ValueGroup(G1Projective::from(value)),
-        })
+        Self((identifier, G1Projective::from(value)).into())
     }
 }
 
@@ -137,10 +134,7 @@ impl TryFrom<&[u8]> for InnerPointShareG1 {
                 )
             })?;
 
-        Ok(Self(DefaultShare {
-            identifier: IdentifierPrimeField(identifier),
-            value: ValueGroup(value),
-        }))
+        Ok(Self((identifier, value).into()))
     }
 }
 
@@ -214,16 +208,13 @@ impl InnerPointShareG1 {
         struct V1(#[serde(deserialize_with = "fixed_arr::BigArray::deserialize")] [u8; 49]);
         let v1 = serde_bare::from_slice::<V1>(bytes)
             .map_err(|e| BlsError::InvalidInputs(e.to_string()))?;
-        let identifier = IdentifierPrimeField(Scalar::from(v1.0[0] as u64));
+        let identifier = Scalar::from(v1.0[0] as u64);
         let mut repr = [0u8; 48];
         repr.as_mut().copy_from_slice(&v1.0[1..]);
         let value = Option::from(G1Projective::from_compressed(&repr)).ok_or_else(|| {
             BlsError::InvalidInputs("Invalid compressed G1Projective".to_string())
         })?;
-        Ok(Self(DefaultShare {
-            identifier,
-            value: ValueGroup(value),
-        }))
+        Ok(Self((identifier, value).into()))
     }
 }
 
@@ -246,10 +237,7 @@ impl subtle::ConditionallySelectable for InnerPointShareG2 {
         let value2 = b.0.value.to_affine();
         let identifier = Scalar::conditional_select(&identifier1, &identifier2, choice);
         let value = G2Affine::conditional_select(&value1, &value2, choice);
-        Self(DefaultShare {
-            identifier: IdentifierPrimeField(identifier),
-            value: ValueGroup(G2Projective::from(value)),
-        })
+        Self((identifier, G2Projective::from(value)).into())
     }
 }
 
@@ -283,10 +271,7 @@ impl TryFrom<&[u8]> for InnerPointShareG2 {
                     "Invalid Value, cannot convert to G2Projective".to_string(),
                 )
             })?;
-        Ok(Self(DefaultShare {
-            identifier: IdentifierPrimeField(identifier),
-            value: ValueGroup(value),
-        }))
+        Ok(Self((identifier, value).into()))
     }
 }
 
@@ -359,15 +344,12 @@ impl InnerPointShareG2 {
         struct V1(#[serde(deserialize_with = "fixed_arr::BigArray::deserialize")] [u8; 97]);
         let v1 = serde_bare::from_slice::<V1>(bytes)
             .map_err(|e| BlsError::InvalidInputs(e.to_string()))?;
-        let identifier = IdentifierPrimeField(Scalar::from(v1.0[0] as u64));
+        let identifier = Scalar::from(v1.0[0] as u64);
         let mut repr = [0u8; 96];
         repr.as_mut().copy_from_slice(&v1.0[1..]);
         let value = Option::from(G2Projective::from_compressed(&repr)).ok_or_else(|| {
             BlsError::InvalidInputs("Invalid compressed G1Projective".to_string())
         })?;
-        Ok(Self(DefaultShare {
-            identifier,
-            value: ValueGroup(value),
-        }))
+        Ok(Self((identifier, value).into()))
     }
 }
